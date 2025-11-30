@@ -1,0 +1,567 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.2">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px '.AppleSystemUIFontMonospaced'}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px '.AppleSystemUIFontMonospaced'; min-height: 15.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;ReLeaf – AI Urban Tree Mapping&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Load Tailwind CSS --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Custom styling to ensure image fits canvas perfectly --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body { font-family: 'Inter', sans-serif; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Container for image/canvas display */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.image-container {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>max-width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: auto;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.image-container img, .image-container canvas {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: block;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: auto;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.image-container canvas {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>top: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>left: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>z-index: 10;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body class="bg-gray-50 min-h-screen"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="app" class="p-4 sm:p-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;header class="mb-8 border-b pb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h1 class="text-3xl font-bold text-emerald-700"&gt;🌲 ReLeaf – AI Urban Tree Mapping&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="text-gray-600 mt-1"&gt;Harnessing Gemini Vision for responsive green cover analysis in Indian cities.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/header&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;main class="grid grid-cols-1 lg:grid-cols-4 gap-6"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- Sidebar (Statistics and Controls) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="lg:col-span-1 space-y-6"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Upload Section --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="bg-white p-5 rounded-xl shadow-lg border border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-xl font-semibold mb-3 text-gray-700"&gt;Upload Drone Image&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;input type="file" id="imageUpload" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="mt-4 text-xs text-gray-500"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="mb-2 font-medium"&gt;Or use a sample image for testing:&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex flex-col space-y-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button id="sample1" class="sample-btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-1 px-3 rounded-lg transition"&gt;Sample 1: Mixed Health&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button id="sample2" class="sample-btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-1 px-3 rounded-lg transition"&gt;Sample 2: Low Cover Area&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;button id="analyzeBtn" class="w-full mt-5 py-2 px-4 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition duration-300 disabled:opacity-50" disabled&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>Analyze Image</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Analysis Summary --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="bg-white p-5 rounded-xl shadow-lg border border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-xl font-semibold mb-3 text-gray-700"&gt;Analysis Summary&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div id="statsPanel" class="space-y-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex justify-between items-center text-sm font-medium border-b pb-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="text-gray-600"&gt;Total Trees Detected:&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span id="totalTrees" class="text-xl font-bold text-gray-800"&gt;0&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex justify-between items-center text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="flex items-center text-emerald-600"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span class="w-3 h-3 bg-emerald-400 rounded-full mr-2"&gt;&lt;/span&gt; Healthy (%)</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span id="healthyPct" class="font-semibold"&gt;0%&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex justify-between items-center text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="flex items-center text-amber-600"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span class="w-3 h-3 bg-amber-400 rounded-full mr-2"&gt;&lt;/span&gt; Stressed (%)</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span id="stressedPct" class="font-semibold"&gt;0%&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex justify-between items-center text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="flex items-center text-red-600"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span class="w-3 h-3 bg-red-400 rounded-full mr-2"&gt;&lt;/span&gt; Dead (%)</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span id="deadPct" class="font-semibold"&gt;0%&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="pt-3 border-t mt-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-lg font-bold text-gray-700"&gt;Replantation Priority Score&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="mt-1 flex items-center justify-between"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div id="priorityScoreDisplay" class="text-3xl font-extrabold text-blue-600"&gt;N/A&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div id="priorityRating" class="text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-medium"&gt;No Data&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- Main Display (Image and Results) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="lg:col-span-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="bg-white p-5 rounded-xl shadow-lg border border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-xl font-semibold mb-4 text-gray-700"&gt;Visual Analysis&lt;/h2&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div id="imagePlaceholder" class="image-container bg-gray-200 flex items-center justify-center rounded-lg border-4 border-dashed border-gray-300 aspect-video text-gray-500 font-medium"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>Upload a drone image or select a sample to begin analysis.</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div id="analysisView" class="hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="image-container relative bg-gray-100 border rounded-lg overflow-hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;img id="uploadedImage" class="w-full h-auto" style="min-height: 200px;" alt="Uploaded Urban Area"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;canvas id="overlayCanvas"&gt;&lt;/canvas&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="mt-4 p-4 bg-blue-50 rounded-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="font-semibold text-blue-800 mb-2 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.723A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2m0 18l6-3m-6 3V2m6 18v-3.382m0-13.236l-6-3m6 3V2m0 0L20 5.618v10.764a1 1 0 01-.553.894L15 20m-6-3h6m-6-1V4m0 11H9m6 0h-3"&gt;&lt;/path&gt;&lt;/svg&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Replantation Priority Area (Heatmap View)</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p id="replantDescription" class="text-sm text-blue-700 italic"&gt;Analysis will highlight specific zones here...&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;!-- Loading Indicator --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div id="loading" class="hidden mt-4 p-4 bg-amber-50 text-amber-800 rounded-lg text-center font-medium"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-amber-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"&gt;&lt;/circle&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"&gt;&lt;/path&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/svg&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>Analyzing image with Gemini Vision... Please wait.</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;!-- Error Message --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div id="errorMsg" class="hidden mt-4 p-4 bg-red-100 text-red-800 rounded-lg font-medium"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>An error occurred during analysis. Please try again.</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/main&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script type="module"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- DOM Elements ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const imageUpload = document.getElementById('imageUpload');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const uploadedImage = document.getElementById('uploadedImage');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const overlayCanvas = document.getElementById('overlayCanvas');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const analyzeBtn = document.getElementById('analyzeBtn');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const imagePlaceholder = document.getElementById('imagePlaceholder');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const analysisView = document.getElementById('analysisView');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const loadingDiv = document.getElementById('loading');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const errorMsgDiv = document.getElementById('errorMsg');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const replantDescription = document.getElementById('replantDescription');</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Stats elements</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const totalTrees = document.getElementById('totalTrees');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const healthyPct = document.getElementById('healthyPct');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const stressedPct = document.getElementById('stressedPct');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const deadPct = document.getElementById('deadPct');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const priorityScoreDisplay = document.getElementById('priorityScoreDisplay');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const priorityRating = document.getElementById('priorityRating');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let base64Image = '';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- Utility Functions ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/**</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* Converts a File object to a Base64 string for API consumption.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* @param {File} file The image file selected by the user.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* @returns {Promise&lt;string&gt;} Base64 data string.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>*/</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function fileToBase64(file) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return new Promise((resolve, reject) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const reader = new FileReader();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>reader.onload = () =&gt; resolve(reader.result.split(',')[1]); // Only need the base64 part</p>
+<p class="p1"><span class="Apple-converted-space">                </span>reader.onerror = error =&gt; reject(error);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>reader.readAsDataURL(file);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/**</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* Converts a URL (for samples) to a Base64 string.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* @param {string} url The URL of the sample image.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* @returns {Promise&lt;string&gt;} Base64 data string.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>*/</p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function urlToBase64(url) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const response = await fetch(url);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const blob = await response.blob();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return await fileToBase64(blob);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>console.error("Error fetching sample image:", error);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>errorMsgDiv.textContent = "Could not load sample image.";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>errorMsgDiv.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return null;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- Event Handlers ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>imageUpload.addEventListener('change', async (event) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const file = event.target.files[0];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (file) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Display the image</p>
+<p class="p1"><span class="Apple-converted-space">                </span>uploadedImage.src = URL.createObjectURL(file);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Convert to Base64 for API</p>
+<p class="p1"><span class="Apple-converted-space">                </span>base64Image = await fileToBase64(file);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>imagePlaceholder.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>analysisView.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>analyzeBtn.disabled = false;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>clearCanvas();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>resetStats();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.querySelectorAll('.sample-btn').forEach(button =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>button.addEventListener('click', async (event) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const sampleId = event.target.id;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>let sampleUrl = '';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Using specific placeholders for Indian urban areas as requested</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (sampleId === 'sample1') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>// Placeholder for a dense urban area with mixed tree health</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>sampleUrl = `https://placehold.co/800x600/10B981/ffffff?text=Indian+City+Park+Area+(Sample+1)`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else if (sampleId === 'sample2') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>// Placeholder for an area with low green cover near buildings (replanting priority)</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>sampleUrl = `https://placehold.co/800x600/FACC15/ffffff?text=Indian+City+Residential+(Sample+2)`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Show loading while fetching sample data</p>
+<p class="p1"><span class="Apple-converted-space">                </span>loadingDiv.textContent = "Loading sample image...";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>loadingDiv.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>errorMsgDiv.classList.add('hidden');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>uploadedImage.src = sampleUrl;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>base64Image = await urlToBase64(sampleUrl);</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>loadingDiv.classList.add('hidden');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (base64Image) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>imagePlaceholder.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>analysisView.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>analyzeBtn.disabled = false;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>clearCanvas();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>resetStats();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>analyzeBtn.addEventListener('click', async () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (base64Image) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>analyzeBtn.disabled = true;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>await callGeminiApi(base64Image);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>analyzeBtn.disabled = false;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Handle canvas resizing when image loads (important for responsiveness)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>uploadedImage.onload = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const img = uploadedImage;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>overlayCanvas.width = img.naturalWidth;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>overlayCanvas.height = img.naturalHeight;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Redraw if there were previous results</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (window.lastAnalysisData) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>renderResults(window.lastAnalysisData);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>window.addEventListener('resize', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Re-render bounding boxes on resize to fit new scaled image/canvas</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (window.lastAnalysisData) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>renderResults(window.lastAnalysisData);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- Canvas Drawing Functions ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/** Resets the canvas and stats panel. */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function clearCanvas() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const ctx = overlayCanvas.getContext('2d');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>window.lastAnalysisData = null; // Clear previous data</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/** Draws the bounding boxes and overlays on the canvas. */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function drawBoundingBoxes(trees) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const ctx = overlayCanvas.getContext('2d');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const scaleX = overlayCanvas.offsetWidth / 1000;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const scaleY = overlayCanvas.offsetHeight / 1000;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Define colors and styles</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const colors = {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>'healthy': { stroke: 'rgba(52, 211, 163, 1)', fill: 'rgba(52, 211, 163, 0.3)' }, // Emerald-400</p>
+<p class="p1"><span class="Apple-converted-space">                </span>'stressed': { stroke: 'rgba(251, 191, 36, 1)', fill: 'rgba(251, 191, 36, 0.3)' }, // Amber-400</p>
+<p class="p1"><span class="Apple-converted-space">                </span>'dead': { stroke: 'rgba(248, 113, 113, 1)', fill: 'rgba(248, 113, 113, 0.3)' } <span class="Apple-converted-space">    </span>// Red-400</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>trees.forEach(tree =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const [x_min, y_min, x_max, y_max] = tree.box;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const style = colors[tree.health] || colors['stressed'];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Calculate scaled coordinates</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const x = x_min * scaleX;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const y = y_min * scaleY;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const width = (x_max - x_min) * scaleX;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const height = (y_max - y_min) * scaleY;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Draw the box</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ctx.strokeStyle = style.stroke;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ctx.fillStyle = style.fill;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ctx.lineWidth = 4;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ctx.strokeRect(x, y, width, height);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ctx.fillRect(x, y, width, height);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/** Updates the statistics panel. */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function updateStats(data) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const treeCounts = data.trees.reduce((acc, tree) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>acc[tree.health] = (acc[tree.health] || 0) + 1;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return acc;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}, { healthy: 0, stressed: 0, dead: 0 });</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const total = data.trees.length;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>totalTrees.textContent = total.toString();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const getPct = (count) =&gt; total === 0 ? '0%' : `${((count / total) * 100).toFixed(1)}%`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>healthyPct.textContent = getPct(treeCounts.healthy);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>stressedPct.textContent = getPct(treeCounts.stressed);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>deadPct.textContent = getPct(treeCounts.dead);</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>replantDescription.textContent = data.lowGreenCoverDescription || 'No description provided by the analysis.';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Calculate Replantation Priority Score (Higher score = Higher Priority)</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Weight dead trees (3x) and stressed trees (2x) more than healthy (0x).</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const priorityScore = total === 0 ? 0 :<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>((treeCounts.dead * 3 + treeCounts.stressed * 2) / total) * 100;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>priorityScoreDisplay.textContent = priorityScore.toFixed(0);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Set Rating based on score</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let ratingText = 'Low Priority';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let ratingColor = 'bg-green-100 text-green-800';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (priorityScore &gt; 30) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ratingText = 'Moderate Priority';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ratingColor = 'bg-yellow-100 text-yellow-800';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (priorityScore &gt; 60) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ratingText = 'High Priority';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>ratingColor = 'bg-red-100 text-red-800';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>priorityRating.textContent = ratingText;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>priorityRating.className = `text-sm px-3 py-1 rounded-full font-medium ${ratingColor}`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/** Resets all stats to initial state. */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function resetStats() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>totalTrees.textContent = '0';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>healthyPct.textContent = '0%';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>stressedPct.textContent = '0%';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>deadPct.textContent = '0%';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>priorityScoreDisplay.textContent = 'N/A';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>priorityRating.textContent = 'No Data';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>priorityRating.className = `text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-medium`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>replantDescription.textContent = 'Analysis will highlight specific zones here...';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/** Main function to render all results after API call. */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderResults(data) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>clearCanvas();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (data &amp;&amp; data.trees) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>drawBoundingBoxes(data.trees);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>updateStats(data);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>window.lastAnalysisData = data; // Store for redraw on resize</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- Gemini API Call Configuration ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// IMPORTANT: The system instruction is highly detailed to force specific behavior from the model.</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const systemInstruction = `You are an expert urban ecologist and AI vision model specialized in analyzing high-resolution drone imagery of Indian cities, focusing on tree canopy health and urban green cover scarcity.</p>
+<p class="p2"><br></p>
+<p class="p1">Your primary goal is precision and adherence to the JSON schema. The analysis must be highly accurate and specific to the input image.</p>
+<p class="p2"><br></p>
+<p class="p1">**TASK REQUIREMENTS:**</p>
+<p class="p1">1.<span class="Apple-converted-space">  </span>**Individual Tree Detection and Bounding Boxes:** Identify all visible tree canopies. The bounding box MUST tightly enclose the visible canopy area of each tree.</p>
+<p class="p1">2.<span class="Apple-converted-space">  </span>**Health Assessment:** Classify each tree based on the provided health labels.</p>
+<p class="p1">3.<span class="Apple-converted-space">  </span>**Replanting Priority Area Identification:** Locate and describe large, contiguous areas of impervious surfaces (concrete, roads, rooftops) or bare soil with demonstrably low green cover (less than 10% canopy density) that are suitable for future tree planting initiatives.</p>
+<p class="p2"><br></p>
+<p class="p1">**OUTPUT SCHEMA &amp; CONSTRAINTS:**</p>
+<p class="p1">- The output must STRICTLY be a single JSON object conforming exactly to the defined schema. Do not include any introductory or explanatory text outside of the JSON block.</p>
+<p class="p1">- **Bounding Boxes:** Use the normalized 0-1000 coordinate system where [0, 0] is the top-left corner and [1000, 1000] is the bottom-right. Coordinates MUST be integers. Example: a tree centered in the image occupying 10% of the area might be [450, 450, 550, 550].</p>
+<p class="p2"><br></p>
+<p class="p1">**HEALTH LABEL DEFINITIONS:**</p>
+<p class="p1">- **'healthy':** Canopy is dense, uniform in color (typically deep green), and shows no signs of significant thinning or damage.</p>
+<p class="p1">- **'stressed':** Canopy is sparse, exhibits significant discoloration (yellowing, browning, or patchy), or shows signs of structural damage or disease. These trees require immediate attention.</p>
+<p class="p1">- **'dead':** Complete absence of leaves, gray/brown color over the entire structure, or clear evidence of tree removal leaving only a stump.</p>
+<p class="p2"><br></p>
+<p class="p1">**REPLANTING PRIORITY (lowGreenCoverDescription):**</p>
+<p class="p1">- Provide a detailed, context-specific description (1-3 sentences) of the most prominent low green cover zone identified. Mention nearby landmarks (roads, specific buildings, open fields) to ground the location.`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const responseSchema = {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>type: "OBJECT",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>properties: {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>treeCount: {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>type: "INTEGER",</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>description: "The total number of trees detected in the image."</p>
+<p class="p1"><span class="Apple-converted-space">                </span>},</p>
+<p class="p1"><span class="Apple-converted-space">                </span>trees: {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>type: "ARRAY",</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>description: "A list of all detected trees with their bounding boxes and health status.",</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>items: {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>type: "OBJECT",</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>properties: {</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>box: {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                                </span>type: "ARRAY",</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>items: { type: "INTEGER" },</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>description: "[x_min, y_min, x_max, y_max] normalized from 0 to 1000 (integers)."</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>},</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>health: {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                                </span>type: "STRING",</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>enum: ["healthy", "stressed", "dead"],</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>description: "The estimated health label for the tree."</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>propertyOrdering: ["box", "health"]</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>},</p>
+<p class="p1"><span class="Apple-converted-space">                </span>lowGreenCoverDescription: {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>type: "STRING",</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>description: "A detailed description (1-2 sentences) of the areas that represent low green cover and should be prioritized for replanting or tree preservation, referencing visible landmarks if possible."</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>},</p>
+<p class="p1"><span class="Apple-converted-space">            </span>propertyOrdering: ["treeCount", "trees", "lowGreenCoverDescription"]</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function callGeminiApi(base64Data, maxRetries = 5) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// =========================================================================================</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// FOR LOCAL USE: Insert your Gemini API Key below.</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// You can get a free key at: https://aistudio.google.com/app/apikey</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// =========================================================================================</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const apiKey = "AIzaSyAfFXNiWgzfct5eJV6DVh1xnPo2aUStQ7c";<span class="Apple-converted-space"> </span></p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>loadingDiv.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>errorMsgDiv.classList.add('hidden');</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const userPrompt = "Analyze this drone image of an Indian urban area. Identify all trees, assess their health, and identify low green cover areas for replanting priority. Provide the results strictly in the requested JSON format.";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const payload = {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>contents: [{</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>parts: [</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>{ text: userPrompt },</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>{</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>inlineData: {</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>mimeType: "image/png",</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>data: base64Data</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}],</p>
+<p class="p1"><span class="Apple-converted-space">                </span>systemInstruction: {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>parts: [{ text: systemInstruction }]</p>
+<p class="p1"><span class="Apple-converted-space">                </span>},</p>
+<p class="p1"><span class="Apple-converted-space">                </span>generationConfig: {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>responseMimeType: "application/json",</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>responseSchema: responseSchema</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>for (let attempt = 0; attempt &lt; maxRetries; attempt++) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const response = await fetch(apiUrl, {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>method: 'POST',</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>headers: { 'Content-Type': 'application/json' },</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>body: JSON.stringify(payload)</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (!response.ok) {</p>
+<p class="p1"><span class="Apple-converted-space">                         </span>// Specific check for 403 Forbidden which usually means missing/invalid API Key</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (response.status === 403) {</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>loadingDiv.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>errorMsgDiv.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Analysis failed: &lt;strong&gt;Unauthorized (403)&lt;/strong&gt;.&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span class="text-sm"&gt;If running locally, you must set your API Key in the code. &lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Get a key here: &lt;a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline text-red-800 font-bold"&gt;Google AI Studio&lt;/a&gt;&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>errorMsgDiv.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>// Do not retry for auth errors</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>return;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>// Specific check for 429 Too Many Requests</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (response.status === 429) {</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>loadingDiv.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>errorMsgDiv.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Analysis failed: &lt;strong&gt;Rate Limit Exceeded (429)&lt;/strong&gt;.&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span class="text-sm"&gt;You are making requests too quickly for the current API tier. Please wait a minute and try again.&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>errorMsgDiv.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>// Throw the error with status code to trigger retry logic for other errors</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>throw new Error(`HTTP error! status: ${response.status}`);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const result = await response.json();</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const candidate = result.candidates?.[0];</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (candidate &amp;&amp; candidate.content?.parts?.[0]?.text) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const jsonText = candidate.content.parts[0].text;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const analysisData = JSON.parse(jsonText);</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>renderResults(analysisData);</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>loadingDiv.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>return; // Success</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>throw new Error("Invalid response structure from API.");</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>console.error(`Attempt ${attempt + 1} failed:`, error);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (attempt === maxRetries - 1) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>loadingDiv.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>// Keep previous error message if it was the 403 custom one, otherwise show generic</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (!errorMsgDiv.innerHTML.includes('Unauthorized')) {</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>errorMsgDiv.textContent = `Analysis failed after ${maxRetries} attempts. Details: ${error.message}`;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>errorMsgDiv.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>// Reset canvas and stats</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>clearCanvas();</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>resetStats();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>// Exponential backoff</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const delay = Math.pow(2, attempt) * 1000;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>await new Promise(resolve =&gt; setTimeout(resolve, delay));</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Initial setup</p>
+<p class="p1"><span class="Apple-converted-space">        </span>resetStats();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
