@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ReLeaf – AI Urban Tree Mapping</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: 250px; /* Reduced min-height for mobile */
+            background-color: #f3f4f6;
+        }
+        .image-container img, .image-container video {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .image-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+        /* Hidden class utility */
+        .hidden { display: none !important; }
+        
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            .container { padding: 1rem; }
+            h1 { font-size: 1.5rem; }
+            h2 { font-size: 1.25rem; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="app" class="p-4 sm:p-8 max-w-7xl mx-auto">
+        <header class="mb-6 border-b pb-4">
+            <h1 class="text-2xl sm:text-3xl font-bold text-emerald-700">🌲 ReLeaf – AI Urban Tree Mapping</h1>
+            <p class="text-sm sm:text-base text-gray-600 mt-1">Mobile-Ready Version: Python Backend + HTML Frontend</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+            <!-- Sidebar (Controls) -->
+            <div class="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
+                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
+                    <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Input Source</h2>
+                    
+                    <!-- Tabs for switching modes -->
+                    <div class="flex space-x-2 mb-4 border-b pb-2">
+                        <button id="tabUpload" class="flex-1 px-3 py-2 text-sm font-medium text-emerald-600 border-b-2 border-emerald-600 focus:outline-none">Upload</button>
+                        <button id="tabCamera" class="flex-1 px-3 py-2 text-sm font-medium text-gray-500 hover:text-emerald-600 focus:outline-none">Camera</button>
+                    </div>
+
+                    <!-- Upload Controls -->
+                    <div id="uploadControls">
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="imageUpload">Upload file</label>
+                        <input type="file" id="imageUpload" accept="image/*" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                    </div>
+
+                    <!-- Camera Controls (Hidden by default) -->
+                    <div id="cameraControls" class="hidden space-y-3">
+                        <button id="startCameraBtn" class="w-full py-3 px-4 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition touch-manipulation">Start Camera</button>
+                        <button id="captureBtn" class="w-full py-3 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition hidden touch-manipulation">Capture Photo</button>
+                    </div>
+                    
+                    <div class="mt-4 flex items-center p-3 bg-yellow-50 rounded border border-yellow-200">
+                        <input id="demoMode" type="checkbox" class="w-5 h-5 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500">
+                        <label for="demoMode" class="ml-3 text-sm font-medium text-gray-700">Simulation Mode (UI Test)</label>
+                    </div>
+                    
+                    <div class="mt-4 text-xs text-gray-500">
+                        <p class="mb-2 font-medium">Or use a sample:</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="sample1" class="sample-btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-3 rounded-lg transition text-xs sm:text-sm">Sample 1: Park</button>
+                            <button id="sample2" class="sample-btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-3 rounded-lg transition text-xs sm:text-sm">Sample 2: City</button>
+                        </div>
+                    </div>
+                    <button id="analyzeBtn" class="w-full mt-5 py-3 px-4 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition duration-300 disabled:opacity-50 touch-manipulation" disabled>
+                        Analyze Image
+                    </button>
+                    <p id="serverStatus" class="mt-2 text-xs text-center text-gray-400">Checking server connection...</p>
+                </div>
+
+                <!-- Stats Panel (Mobile: Stacked below controls, Desktop: Sidebar) -->
+                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
+                    <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Analysis Summary</h2>
+                    <div id="statsPanel" class="space-y-3">
+                        <div class="flex justify-between items-center text-sm font-medium border-b pb-2">
+                            <span class="text-gray-600">Total Trees:</span>
+                            <span id="totalTrees" class="text-xl font-bold text-gray-800">0</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm"><span class="flex items-center text-emerald-600"><span class="w-2 h-2 bg-emerald-400 rounded-full mr-2"></span>Healthy</span><span id="healthyPct" class="font-bold">0%</span></div>
+                            <div class="flex justify-between text-sm"><span class="flex items-center text-amber-600"><span class="w-2 h-2 bg-amber-400 rounded-full mr-2"></span>Stressed</span><span id="stressedPct" class="font-bold">0%</span></div>
+                            <div class="flex justify-between text-sm"><span class="flex items-center text-red-600"><span class="w-2 h-2 bg-red-400 rounded-full mr-2"></span>Dead</span><span id="deadPct" class="font-bold">0%</span></div>
+                        </div>
+                        <div class="pt-3 border-t mt-3">
+                            <p class="text-xs font-bold text-gray-500 uppercase">Priority Score</p>
+                            <div class="flex items-center justify-between mt-1">
+                                <div id="priorityScoreDisplay" class="text-2xl font-extrabold text-blue-600">N/A</div>
+                                <div id="priorityRating" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500">None</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Display -->
+            <div class="lg:col-span-3 order-1 lg:order-2">
+                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200 min-h-[300px] sm:min-h-[500px]">
+                    <h2 class="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Visual Analysis</h2>
+                    
+                    <!-- Display Area -->
+                    <div id="imagePlaceholder" class="image-container bg-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 aspect-video text-gray-400 text-center p-4">
+                        <span class="text-sm sm:text-base">Select Upload or Camera to begin</span>
+                    </div>
+
+                    <div id="analysisView" class="hidden">
+                        <div class="image-container rounded-lg overflow-hidden bg-gray-900 relative">
+                            <video id="cameraFeed" class="w-full hidden" autoplay playsinline></video>
+                            <img id="uploadedImage" class="w-full hidden" alt="Analysis Target">
+                            <canvas id="overlayCanvas"></canvas>
+                        </div>
+                        <div id="descBox" class="hidden mt-4 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-100">
+                            <h3 class="font-semibold text-blue-800 text-sm mb-1">Replanting Zone Identification</h3>
+                            <p id="replantDescription" class="text-xs sm:text-sm text-blue-700">Analysis pending...</p>
+                        </div>
+                    </div>
+
+                    <div id="loading" class="hidden mt-8 text-center">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
+                        <p id="loadingText" class="mt-2 text-emerald-700 font-medium text-sm">Sending to Python Backend...</p>
+                    </div>
+
+                    <div id="errorMsg" class="hidden mt-4 p-3 sm:p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 text-xs sm:text-sm break-words"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        // --- CONFIGURATION ---
+        // IMPORTANT: For mobile testing, replace 127.0.0.1 with your computer's local IP (e.g., 192.168.1.5)
+        // if accessing from a phone on the same Wi-Fi.
+        // const BACKEND_URL = "http://127.0.0.1:5000/analyze"; 
+        
+        // UPDATED FOR CLOUD DEPLOYMENT:
+        const BACKEND_URL = "https://app-ptfm.onrender.com/analyze"; 
+
+        // --- ELEMENTS ---
+        const els = {
+            // Tabs
+            tabUpload: document.getElementById('tabUpload'),
+            tabCamera: document.getElementById('tabCamera'),
+            uploadControls: document.getElementById('uploadControls'),
+            cameraControls: document.getElementById('cameraControls'),
+            
+            // Inputs
+            upload: document.getElementById('imageUpload'),
+            startCamera: document.getElementById('startCameraBtn'),
+            captureBtn: document.getElementById('captureBtn'),
+            btn: document.getElementById('analyzeBtn'),
+            
+            // Display
+            placeholder: document.getElementById('imagePlaceholder'),
+            view: document.getElementById('analysisView'),
+            img: document.getElementById('uploadedImage'),
+            video: document.getElementById('cameraFeed'),
+            canvas: document.getElementById('overlayCanvas'),
+            
+            // Status
+            loader: document.getElementById('loading'),
+            loadText: document.getElementById('loadingText'),
+            err: document.getElementById('errorMsg'),
+            descBox: document.getElementById('descBox'),
+            desc: document.getElementById('replantDescription'),
+            demo: document.getElementById('demoMode'),
+            serverStatus: document.getElementById('serverStatus'),
+            
+            // Stats
+            stats: {
+                total: document.getElementById('totalTrees'),
+                h: document.getElementById('healthyPct'),
+                s: document.getElementById('stressedPct'),
+                d: document.getElementById('deadPct'),
+                score: document.getElementById('priorityScoreDisplay'),
+                rating: document.getElementById('priorityRating')
+            }
+        };
+
+        let currentBase64 = '';
+        let lastData = null;
+        let stream = null; // Store camera stream
+
+        // --- CORE FUNCTIONS ---
+
+        function resizeAndCompress(fileOrBlob, maxWidth = 1024) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const cvs = document.createElement('canvas');
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > maxWidth) {
+                            h = Math.round((h * maxWidth) / w);
+                            w = maxWidth;
+                        }
+                        cvs.width = w;
+                        cvs.height = h;
+                        const ctx = cvs.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(cvs.toDataURL('image/jpeg', 0.8).split(',')[1]);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(fileOrBlob);
+            });
+        }
+
+        async function fetchSample(url) {
+            try {
+                const res = await fetch(url);
+                const blob = await res.blob();
+                return await resizeAndCompress(blob);
+            } catch (e) { throw new Error("Sample load failed"); }
+        }
+
+        // --- UI TOGGLING ---
+        
+        function switchTab(mode) {
+            if (mode === 'upload') {
+                els.tabUpload.className = "flex-1 px-3 py-2 text-sm font-medium text-emerald-600 border-b-2 border-emerald-600 focus:outline-none";
+                els.tabCamera.className = "flex-1 px-3 py-2 text-sm font-medium text-gray-500 hover:text-emerald-600 focus:outline-none";
+                els.uploadControls.classList.remove('hidden');
+                els.cameraControls.classList.add('hidden');
+                stopCamera();
+            } else {
+                els.tabCamera.className = "flex-1 px-3 py-2 text-sm font-medium text-emerald-600 border-b-2 border-emerald-600 focus:outline-none";
+                els.tabUpload.className = "flex-1 px-3 py-2 text-sm font-medium text-gray-500 hover:text-emerald-600 focus:outline-none";
+                els.cameraControls.classList.remove('hidden');
+                els.uploadControls.classList.add('hidden');
+            }
+            resetUI();
+            els.placeholder.classList.remove('hidden');
+            els.view.classList.add('hidden');
+        }
+
+        async function startCamera() {
+            try {
+                // Use 'environment' facing mode for rear camera on mobile
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                els.video.srcObject = stream;
+                els.placeholder.classList.add('hidden');
+                els.view.classList.remove('hidden');
+                els.video.classList.remove('hidden');
+                els.img.classList.add('hidden');
+                els.startCamera.classList.add('hidden');
+                els.captureBtn.classList.remove('hidden');
+            } catch (e) {
+                alert("Camera access denied or not available. Please check permissions.");
+                console.error(e);
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            els.video.srcObject = null;
+            els.startCamera.classList.remove('hidden');
+            els.captureBtn.classList.add('hidden');
+        }
+
+        function capturePhoto() {
+            const cvs = document.createElement('canvas');
+            cvs.width = els.video.videoWidth;
+            cvs.height = els.video.videoHeight;
+            cvs.getContext('2d').drawImage(els.video, 0, 0);
+            
+            // Convert to image for display/analysis
+            cvs.toBlob(async (blob) => {
+                els.img.src = URL.createObjectURL(blob);
+                currentBase64 = await resizeAndCompress(blob);
+                
+                // Switch view to static image
+                els.video.classList.add('hidden');
+                els.img.classList.remove('hidden');
+                stopCamera(); // Save battery
+                
+                els.btn.disabled = false;
+            }, 'image/jpeg');
+        }
+
+        // --- DRAWING LOGIC ---
+
+        function draw(data) {
+            const ctx = els.canvas.getContext('2d');
+            // Ensure canvas matches the displayed image size
+            els.canvas.width = els.img.clientWidth || els.img.naturalWidth;
+            els.canvas.height = els.img.clientHeight || els.img.naturalHeight;
+            ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
+
+            if (!data?.trees) return;
+
+            const sx = els.canvas.width / 1000;
+            const sy = els.canvas.height / 1000;
+
+            data.trees.forEach(t => {
+                let [ymin, xmin, ymax, xmax] = t.box;
+                if (xmin > xmax) [xmin, xmax] = [xmax, xmin];
+                if (ymin > ymax) [ymin, ymax] = [ymax, ymin];
+
+                const x = xmin * sx;
+                const y = ymin * sy;
+                const w = (xmax - xmin) * sx;
+                const h = (ymax - ymin) * sy;
+
+                const color = t.health === 'healthy' ? '#10B981' : 
+                              t.health === 'stressed' ? '#F59E0B' : '#EF4444';
+                
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x, y, w, h);
+                ctx.fillStyle = color + '40';
+                ctx.fillRect(x, y, w, h);
+            });
+        }
+
+        function updateUI(data) {
+            const counts = { healthy: 0, stressed: 0, dead: 0 };
+            data.trees.forEach(t => counts[t.health] = (counts[t.health] || 0) + 1);
+            
+            const total = data.trees.length;
+            els.stats.total.innerText = total;
+            
+            const calc = (n) => total ? ((n/total)*100).toFixed(0) + '%' : '0%';
+            els.stats.h.innerText = calc(counts.healthy);
+            els.stats.s.innerText = calc(counts.stressed);
+            els.stats.d.innerText = calc(counts.dead);
+            
+            const score = total ? ((counts.dead * 3 + counts.stressed * 1.5) / total) * 100 : 0;
+            els.stats.score.innerText = score.toFixed(0);
+            
+            els.stats.rating.innerText = score > 50 ? 'High Priority' : score > 20 ? 'Moderate' : 'Low';
+            els.stats.rating.className = `text-xs px-2 py-1 rounded ${score > 50 ? 'bg-red-100 text-red-800' : score > 20 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`;
+            
+            els.desc.innerText = data.lowGreenCoverDescription || "No specific zone detected.";
+            els.descBox.classList.remove('hidden');
+        }
+
+        function resetUI() {
+            els.err.classList.add('hidden');
+            els.descBox.classList.add('hidden');
+            const ctx = els.canvas.getContext('2d');
+            ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
+            ['total','h','s','d','score'].forEach(k => els.stats[k].innerText = k === 'score' ? 'N/A' : '0');
+            els.stats.rating.innerText = 'None';
+            els.stats.rating.className = 'text-xs px-2 py-1 rounded bg-gray-100 text-gray-500';
+        }
+
+        // --- BACKEND API CALL ---
+
+        async function analyze() {
+            resetUI();
+            els.btn.disabled = true;
+            els.loader.classList.remove('hidden');
+            
+            if (els.demo.checked) {
+                await new Promise(r => setTimeout(r, 1000));
+                const fakeTrees = Array.from({length: 6}, () => {
+                    let x = Math.random()*700;
+                    let y = Math.random()*700;
+                    return {
+                        box: [y, x, y+150, x+150],
+                        health: ['healthy','stressed','dead'][Math.floor(Math.random()*3)]
+                    };
+                });
+                const simData = { trees: fakeTrees, lowGreenCoverDescription: "SIMULATED DATA (UI Test)" };
+                draw(simData);
+                updateUI(simData);
+                els.loader.classList.add('hidden');
+                els.btn.disabled = false;
+                return;
+            }
+
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: currentBase64 })
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`Server Error (${response.status}): ${errText}`);
+                }
+
+                const result = await response.json();
+                if (result.error) throw new Error(result.error);
+                
+                lastData = result;
+                draw(result);
+                updateUI(result);
+
+            } catch (e) {
+                els.err.innerHTML = `<strong>Backend Error:</strong> ${e.message}<br><span class="text-xs text-gray-500">Make sure server.py is running on port 5000. If on mobile, use your computer's IP address.</span>`;
+                els.err.classList.remove('hidden');
+            } finally {
+                els.loader.classList.add('hidden');
+                els.btn.disabled = false;
+            }
+        }
+
+        // --- INIT ---
+
+        els.tabUpload.onclick = () => switchTab('upload');
+        els.tabCamera.onclick = () => switchTab('camera');
+        
+        els.startCamera.onclick = startCamera;
+        els.captureBtn.onclick = capturePhoto;
+
+        els.upload.onchange = async (e) => {
+            const f = e.target.files[0];
+            if (!f) return;
+            els.img.src = URL.createObjectURL(f);
+            
+            // Show image, hide video
+            els.video.classList.add('hidden');
+            els.img.classList.remove('hidden');
+            els.placeholder.classList.add('hidden');
+            els.view.classList.remove('hidden');
+
+            currentBase64 = await resizeAndCompress(f);
+            els.btn.disabled = false;
+            resetUI();
+        };
+
+        els.btn.onclick = analyze;
+        window.onresize = () => lastData && draw(lastData);
+        
+        document.getElementById('sample1').onclick = async () => {
+             els.img.src = "https://placehold.co/800x600/10B981/ffffff?text=Park";
+             currentBase64 = await fetchSample(els.img.src);
+             
+             // Show image, hide video
+             els.video.classList.add('hidden');
+             els.img.classList.remove('hidden');
+             els.placeholder.classList.add('hidden');
+             els.view.classList.remove('hidden');
+             
+             els.btn.disabled = false;
+             resetUI();
+        };
+        
+        // Simple health check on load
+        fetch(BACKEND_URL.replace('/analyze', '/'))
+            .then(() => els.serverStatus.innerText = "✅ Python Backend Connected")
+            .catch(() => els.serverStatus.innerText = "❌ Python Backend Not Found (Start server.py)");
+
+    </script>
+</body>
+</html>
