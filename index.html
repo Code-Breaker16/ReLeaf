@@ -8,6 +8,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body { font-family: 'Inter', sans-serif; }
+        /* Base image and canvas styles */
         .image-container {
             position: relative;
             width: 100%;
@@ -30,56 +31,77 @@
         }
         .hidden { display: none !important; }
         
-        /* New CSS for Full Screen Mode */
+        /* Full Screen CSS Overhaul (Retained functionality) */
         .fullscreen-app {
             max-width: none !important; 
             padding: 0 !important; 
             margin: 0 !important;
-            height: 100vh;
-            overflow: hidden; /* Prevent body scroll in fullscreen */
+            min-height: 100vh; 
+        }
+        .fullscreen-header {
+             margin-bottom: 0 !important;
+             padding: 1rem !important;
+             border-bottom: 1px solid #e5e7eb;
         }
         .fullscreen-main {
-            height: 100%;
+            display: flex; 
+            flex-direction: column;
+            gap: 0 !important;
         }
         .fullscreen-display-panel {
-            flex: 1; 
-            max-width: 100%;
-            padding: 0;
+            width: 100%;
+            order: 1 !important; 
         }
         .fullscreen-visual-box {
             border-radius: 0 !important;
             padding: 0 !important;
             box-shadow: none !important;
             border: none !important;
-            height: 100%; 
-            display: flex;
-            flex-direction: column;
         }
         .fullscreen-image-container {
-            flex-grow: 1; /* Allow container to fill space */
-            max-width: 100vw;
-            height: auto;
-            max-height: 100%; 
+            width: 100%;
+            max-height: 80vh; 
+            margin: 0 auto;
         }
         .fullscreen-image-container img, 
         .fullscreen-image-container video,
         .fullscreen-image-container canvas {
-            object-fit: contain; /* Important: ensures image fits without cropping */
+            object-fit: contain; 
             width: 100%;
-            height: 100%;
+            max-height: 100%;
+        }
+        
+        /* Custom styles for aesthetic improvement */
+        .input-file-label {
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+            color: #1f2937; /* text-gray-900 */
+        }
+        .input-file-control {
+             font-size: 0.75rem; /* text-xs */
+             padding-top: 0.5rem;
+             padding-bottom: 0.5rem;
+        }
+        .analysis-description-text {
+            font-size: 0.875rem; /* text-sm for better readability in the info box */
+        }
+        .visual-analysis-heading {
+             font-size: 1.25rem; /* text-xl */
+             font-weight: 700; /* font-bold */
         }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div id="app" class="p-4 sm:p-8 max-w-7xl mx-auto">
-        <header class="mb-6 border-b pb-4">
-            <h1 class="text-2xl sm:text-3xl font-bold text-emerald-700">🌲 ReLeaf – Cloud AI</h1>
+        <header id="app-header" class="mb-6 border-b pb-4">
+            <h1 class="text-3xl font-bold text-emerald-700">🌲 ReLeaf – Cloud AI</h1>
+            <p class="text-sm text-gray-500">Urban Tree Health Analysis</p>
         </header>
 
         <main id="main-content" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div id="controls-panel" class="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
                 <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
-                    <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Input Source</h2>
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Input Source</h2>
                     
                     <div class="flex space-x-2 mb-4 border-b pb-2">
                         <button id="tabUpload" class="flex-1 px-3 py-2 text-sm font-medium text-emerald-600 border-b-2 border-emerald-600">Upload</button>
@@ -87,16 +109,16 @@
                     </div>
 
                     <div id="uploadControls">
-                        <label class="block mb-2 text-sm font-medium text-gray-900">Upload file</label>
-                        <input type="file" id="imageUpload" accept="image/*" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50">
+                        <label class="block mb-2 input-file-label">Upload file</label>
+                        <input type="file" id="imageUpload" accept="image/*" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 input-file-control">
                     </div>
 
                     <div id="cameraControls" class="hidden space-y-3">
-                        <button id="startCameraBtn" class="w-full py-3 px-4 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200">Start Camera</button>
-                        <button id="captureBtn" class="w-full py-3 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 hidden">Capture Photo</button>
+                        <button id="startCameraBtn" class="w-full py-2 px-4 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 text-sm">Start Camera</button>
+                        <button id="captureBtn" class="w-full py-2 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 hidden text-sm">Capture Photo</button>
                     </div>
                     
-                    <button id="analyzeBtn" class="w-full mt-5 py-3 px-4 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50" disabled>
+                    <button id="analyzeBtn" class="w-full mt-6 py-3 px-4 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50 text-base" disabled>
                         Analyze Image
                     </button>
                     
@@ -106,12 +128,12 @@
                 </div>
                 
                 <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
-                    <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Analysis Summary</h2>
+                    <h2 class="text-xl font-semibold mb-3 text-gray-700">Analysis Summary</h2>
                     <div id="statsPanel" class="space-y-3">
                         <div class="space-y-2">
-                            <div class="flex justify-between text-sm"><span class="flex items-center text-emerald-600">Healthy</span><span id="healthyPct" class="font-bold">0%</span></div>
-                            <div class="flex justify-between text-sm"><span class="flex items-center text-amber-600">Stressed</span><span id="stressedPct" class="font-bold">0%</span></div>
-                            <div class="flex justify-between text-sm"><span class="flex items-center text-red-600">Dead</span><span id="deadPct" class="font-bold">0%</span></div>
+                            <div class="flex justify-between text-sm"><span class="flex items-center text-emerald-600 font-medium">Healthy</span><span id="healthyPct" class="font-bold">0%</span></div>
+                            <div class="flex justify-between text-sm"><span class="flex items-center text-amber-600 font-medium">Stressed</span><span id="stressedPct" class="font-bold">0%</span></div>
+                            <div class="flex justify-between text-sm"><span class="flex items-center text-red-600 font-medium">Dead</span><span id="deadPct" class="font-bold">0%</span></div>
                         </div>
                     </div>
                 </div>
@@ -120,8 +142,8 @@
             <div id="display-panel" class="lg:col-span-3 order-1 lg:order-2">
                 <div id="visual-analysis-box" class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg sm:text-xl font-semibold text-gray-700">Visual Analysis</h2>
-                        <button id="fullScreenToggle" class="hidden px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        <h2 class="visual-analysis-heading text-gray-700">Visual Analysis</h2>
+                        <button id="fullScreenToggle" class="hidden px-3 py-1 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
                             View Full Screen
                         </button>
                     </div>
@@ -138,7 +160,7 @@
                         </div>
                         
                         <div id="descBox" class="hidden mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                            <p id="replantDescription" class="text-xs sm:text-sm text-blue-700"></p>
+                            <p id="replantDescription" class="analysis-description-text text-blue-700"></p>
                         </div>
                     </div>
 
@@ -147,7 +169,7 @@
                         <p class="mt-2 text-emerald-700 font-medium text-sm">Processing in Cloud... (This may take 1 min if server is waking up)</p>
                     </div>
 
-                    <div id="errorMsg" class="hidden mt-4 p-3 bg-red-50 text-red-700 rounded-lg border border-red-200 text-xs sm:text-sm break-words"></div>
+                    <div id="errorMsg" class="hidden mt-4 p-3 bg-red-50 text-red-700 rounded-lg border border-red-200 text-sm break-words"></div>
                 </div>
             </div>
         </main>
@@ -160,6 +182,7 @@
         // --- ELEMENTS ---
         const els = {
             app: document.getElementById('app'),
+            appHeader: document.getElementById('app-header'),
             mainContent: document.getElementById('main-content'),
             tabUpload: document.getElementById('tabUpload'),
             tabCamera: document.getElementById('tabCamera'),
@@ -194,7 +217,7 @@
         let currentBase64 = '';
         let stream = null; 
         let isFullScreen = false;
-        let lastAnalysisData = null; // Store analysis data to redraw the canvas
+        let lastAnalysisData = null; 
 
         // --- FUNCTIONS ---
 
@@ -223,7 +246,6 @@
             const ctx = els.canvas.getContext('2d');
             const imageElement = els.img.classList.contains('hidden') ? els.video : els.img;
 
-            // Function to perform the actual drawing and resizing
             const performDraw = () => {
                 // IMPORTANT: Resize canvas to match the currently displayed element's size
                 els.canvas.width = imageElement.clientWidth || imageElement.videoWidth || imageElement.naturalWidth;
@@ -242,24 +264,22 @@
                     if (ymin > ymax) [ymin, ymax] = [ymax, ymin];
                     
                     ctx.strokeStyle = t.health === 'healthy' ? '#10B981' : t.health === 'stressed' ? '#F59E0B' : '#EF4444';
-                    ctx.lineWidth = isFullScreen ? 4 : 3; // Thicker lines in full screen
+                    ctx.lineWidth = isFullScreen ? 4 : 3; 
                     
                     ctx.strokeRect(xmin * sx, ymin * sy, (xmax-xmin) * sx, (ymax-ymin) * sy);
                 });
             };
 
-            // Check if dimensions are available yet, otherwise wait for load events
             if (imageElement.naturalWidth || imageElement.videoWidth || imageElement.clientWidth) {
                 performDraw();
             } else {
-                // If the element loads asynchronously (especially video or new images)
                 imageElement.onload = performDraw;
                 imageElement.onloadedmetadata = performDraw;
             }
         }
 
         function updateUI(data) {
-            lastAnalysisData = data; // Store the data
+            lastAnalysisData = data; 
             const counts = { healthy: 0, stressed: 0, dead: 0 };
             const total = data.trees?.length || 0;
             
@@ -273,9 +293,9 @@
             els.stats.s.innerText = calc(counts.stressed);
             els.stats.d.innerText = calc(counts.dead);
             
-            // Update description box with server text (Prevents "Local AI..." default text)
+            // FIX: Only show the description box if the server provided a description string
             const description = data.lowGreenCoverDescription;
-            if (description) {
+            if (description && description.trim() !== '') {
                 els.desc.innerText = description;
                 els.descBox.classList.remove('hidden');
             } else {
@@ -331,7 +351,6 @@
                 if (result.error) throw new Error(result.error);
                 
                 updateUI(result);
-                // Draw function will automatically wait for image load to get correct dimensions
                 draw(result); 
 
             } catch (e) {
@@ -347,21 +366,23 @@
             isFullScreen = !isFullScreen;
 
             if (isFullScreen) {
-                document.body.style.overflow = 'hidden'; // Hide body scrollbar
+                // Apply Fullscreen Styles
                 els.app.classList.add('fullscreen-app');
+                els.appHeader.classList.add('fullscreen-header');
+                els.mainContent.classList.remove('grid', 'lg:grid-cols-4', 'gap-6');
                 els.mainContent.classList.add('fullscreen-main');
-                els.displayPanel.classList.remove('lg:col-span-3');
-                els.displayPanel.classList.add('lg:col-span-4', 'fullscreen-display-panel');
+                els.displayPanel.classList.add('fullscreen-display-panel');
                 els.visualAnalysisBox.classList.add('fullscreen-visual-box');
                 els.imgVideoContainer.classList.add('fullscreen-image-container');
                 els.controlsPanel.classList.add('hidden');
                 els.fullScreenToggle.innerText = 'Exit Full Screen';
             } else {
-                document.body.style.overflow = ''; // Restore body scrollbar
+                // Remove Fullscreen Styles
                 els.app.classList.remove('fullscreen-app');
+                els.appHeader.classList.remove('fullscreen-header');
                 els.mainContent.classList.remove('fullscreen-main');
-                els.displayPanel.classList.remove('lg:col-span-4', 'fullscreen-display-panel');
-                els.displayPanel.classList.add('lg:col-span-3');
+                els.mainContent.classList.add('grid', 'lg:grid-cols-4', 'gap-6');
+                els.displayPanel.classList.remove('fullscreen-display-panel');
                 els.visualAnalysisBox.classList.remove('fullscreen-visual-box');
                 els.imgVideoContainer.classList.remove('fullscreen-image-container');
                 els.controlsPanel.classList.remove('hidden');
@@ -370,7 +391,6 @@
             
             // Redraw the canvas after the screen size has changed
             if (lastAnalysisData) {
-                // Wait briefly for browser layout calculation to finish
                 setTimeout(() => draw(lastAnalysisData), 50); 
             }
         }
