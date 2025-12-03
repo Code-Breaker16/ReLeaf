@@ -65,14 +65,10 @@
                         ⏳ Checking Cloud Server...
                     </div>
                 </div>
-
+                
                 <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
                     <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Analysis Summary</h2>
                     <div id="statsPanel" class="space-y-3">
-                        <div class="flex justify-between items-center text-sm font-medium border-b pb-2">
-                            <span class="text-gray-600">Total Trees:</span>
-                            <span id="totalTrees" class="text-xl font-bold text-gray-800">0</span>
-                        </div>
                         <div class="space-y-2">
                             <div class="flex justify-between text-sm"><span class="flex items-center text-emerald-600">Healthy</span><span id="healthyPct" class="font-bold">0%</span></div>
                             <div class="flex justify-between text-sm"><span class="flex items-center text-amber-600">Stressed</span><span id="stressedPct" class="font-bold">0%</span></div>
@@ -80,7 +76,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+                </div>
 
             <div class="lg:col-span-3 order-1 lg:order-2">
                 <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
@@ -97,7 +93,7 @@
                             <canvas id="overlayCanvas"></canvas>
                         </div>
                         <div id="descBox" class="hidden mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                            <p id="replantDescription" class="text-xs sm:text-sm text-blue-700">Analysis pending...</p>
+                            <p id="replantDescription" class="text-xs sm:text-sm text-blue-700"></p>
                         </div>
                     </div>
 
@@ -138,7 +134,6 @@
             desc: document.getElementById('replantDescription'),
             serverStatus: document.getElementById('serverStatus'),
             stats: {
-                total: document.getElementById('totalTrees'),
                 h: document.getElementById('healthyPct'),
                 s: document.getElementById('stressedPct'),
                 d: document.getElementById('deadPct')
@@ -206,26 +201,32 @@
                 data.trees.forEach(t => counts[t.health] = (counts[t.health] || 0) + 1);
             }
             
-            // Update stats panel
-            els.stats.total.innerText = total;
+            // Update percentage stats panel (Total Trees logic removed)
             const calc = (n) => total ? ((n/total)*100).toFixed(0) + '%' : '0%';
             els.stats.h.innerText = calc(counts.healthy);
             els.stats.s.innerText = calc(counts.stressed);
             els.stats.d.innerText = calc(counts.dead);
             
-            // Update description box with server text (removes hardcoded "Local AI..." text)
-            els.desc.innerText = data.lowGreenCoverDescription || "Analysis Complete.";
-            els.descBox.classList.remove('hidden');
+            // Update description box with server text (REMOVED DEFAULT TEXT)
+            const description = data.lowGreenCoverDescription;
+            if (description) {
+                els.desc.innerText = description;
+                els.descBox.classList.remove('hidden');
+            } else {
+                // If the server doesn't send a description, ensure the box stays hidden and cleared
+                els.desc.innerText = '';
+                els.descBox.classList.add('hidden');
+            }
         }
         
         function resetUI() {
-            // Reset stats panel to 0
-            els.stats.total.innerText = '0';
+            // Reset percentage stats panel to 0
             els.stats.h.innerText = '0%';
             els.stats.s.innerText = '0%';
             els.stats.d.innerText = '0%';
-            els.desc.innerText = 'Analysis pending...';
-            els.descBox.classList.add('hidden'); // Ensure description box is hidden on reset
+            // Clear description box on reset
+            els.desc.innerText = ''; 
+            els.descBox.classList.add('hidden'); 
 
             // Clear canvas
             const imageElement = els.img.classList.contains('hidden') ? els.video : els.img;
