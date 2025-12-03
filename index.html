@@ -1,223 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ReLeaf – AI Urban Tree Mapping</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .image-container {
-            position: relative;
-            width: 100%;
-            height: auto;
-            min-height: 250px;
-            background-color: #f3f4f6;
-        }
-        .image-container img, .image-container video {
-            display: block;
-            width: 100%;
-            height: auto;
-        }
-        .image-container canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-        }
-        .hidden { display: none !important; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ReLeaf – AI Urban Tree Mapping</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: 250px;
+            background-color: #f3f4f6;
+        }
+        .image-container img, .image-container video {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .image-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div id="app" class="p-4 sm:p-8 max-w-7xl mx-auto">
-        <header class="mb-6 border-b pb-4">
-            <h1 class="text-2xl sm:text-3xl font-bold text-emerald-700">🌲 ReLeaf – Cloud AI</h1>
-                        <p class="text-sm sm:text-base text-gray-600 mt-1">Urban Tree Health Analysis</p>
-        </header>
+    <div id="app" class="p-4 sm:p-8 max-w-7xl mx-auto">
+        <header class="mb-6 border-b pb-4">
+            <h1 class="text-2xl sm:text-3xl font-bold text-emerald-700">🌲 ReLeaf – Cloud AI</h1>
+        </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        <div class="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
-                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
-                    <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Input Source</h2>
-                    
-                    <div class="flex space-x-2 mb-4 border-b pb-2">
-                        <button id="tabUpload" class="flex-1 px-3 py-2 text-sm font-medium text-emerald-600 border-b-2 border-emerald-600">Upload</button>
-                        <button id="tabCamera" class="flex-1 px-3 py-2 text-sm font-medium text-gray-500 hover:text-emerald-600">Camera</button>
-                    </div>
+        <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div class="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
+                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
+                    <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Input Source</h2>
+                    
+                    <div class="flex space-x-2 mb-4 border-b pb-2">
+                        <button id="tabUpload" class="flex-1 px-3 py-2 text-sm font-medium text-emerald-600 border-b-2 border-emerald-600">Upload</button>
+                        <button id="tabCamera" class="flex-1 px-3 py-2 text-sm font-medium text-gray-500 hover:text-emerald-600">Camera</button>
+                    </div>
 
-                    <div id="uploadControls">
-                        <label class="block mb-2 text-sm font-medium text-gray-900">Upload file</label>
-                        <input type="file" id="imageUpload" accept="image/*" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50">
-                    </div>
+                    <div id="uploadControls">
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Upload file</label>
+                        <input type="file" id="imageUpload" accept="image/*" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50">
+                    </div>
 
-                    <div id="cameraControls" class="hidden space-y-3">
-                        <button id="startCameraBtn" class="w-full py-3 px-4 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200">Start Camera</button>
-                        <button id="captureBtn" class="w-full py-3 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 hidden">Capture Photo</button>
-                    </div>
-                    
-                    <button id="analyzeBtn" class="w-full mt-5 py-3 px-4 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50" disabled>
-                        Analyze Image
-                    </button>
-                    
-                    <div id="serverStatus" class="mt-3 p-2 bg-gray-100 rounded text-xs text-center text-gray-500">
-                        ⏳ Checking Cloud Server...
-                    </div>
-                </div>
+                    <div id="cameraControls" class="hidden space-y-3">
+                        <button id="startCameraBtn" class="w-full py-3 px-4 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200">Start Camera</button>
+                        <button id="captureBtn" class="w-full py-3 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 hidden">Capture Photo</button>
+                    </div>
+                    
+                    <button id="analyzeBtn" class="w-full mt-5 py-3 px-4 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50" disabled>
+                        Analyze Image
+                    </button>
+                    
+                    <div id="serverStatus" class="mt-3 p-2 bg-gray-100 rounded text-xs text-center text-gray-500">
+                        ⏳ Checking Cloud Server...
+                    </div>
+                </div>
 
-                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
-                    <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Analysis Summary</h2>
-                    <div id="statsPanel" class="space-y-3">
-                        <div class="flex justify-between items-center text-sm font-medium border-b pb-2">
-                            <span class="text-gray-600">Total Trees:</span>
-                            <span id="totalTrees" class="text-xl font-bold text-gray-800">0</span>
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-sm"><span class="flex items-center text-emerald-600">Healthy</span><span id="healthyPct" class="font-bold">0%</span></div>
-                            <div class="flex justify-between text-sm"><span class="flex items-center text-amber-600">Stressed</span><span id="stressedPct" class="font-bold">0%</span></div>
-                            <div class="flex justify-between text-sm"><span class="flex items-center text-red-600">Dead</span><span id="deadPct" class="font-bold">0%</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
+                    <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Analysis Summary</h2>
+                    <div id="statsPanel" class="space-y-3">
+                        <div class="flex justify-between items-center text-sm font-medium border-b pb-2">
+                            <span class="text-gray-600">Total Trees:</span>
+                            <span id="totalTrees" class="text-xl font-bold text-gray-800">0</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm"><span class="flex items-center text-emerald-600">Healthy</span><span id="healthyPct" class="font-bold">0%</span></div>
+                            <div class="flex justify-between text-sm"><span class="flex items-center text-amber-600">Stressed</span><span id="stressedPct" class="font-bold">0%</span></div>
+                            <div class="flex justify-between text-sm"><span class="flex items-center text-red-600">Dead</span><span id="deadPct" class="font-bold">0%</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="lg:col-span-3 order-1 lg:order-2">
-                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
-                    <h2 class="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Visual Analysis</h2>
-                    
-                    <div id="imagePlaceholder" class="image-container bg-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 aspect-video text-gray-400 text-center p-4">
-                        <span class="text-sm">Select Upload or Camera to begin</span>
-                    </div>
+            <div class="lg:col-span-3 order-1 lg:order-2">
+                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
+                    <h2 class="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Visual Analysis</h2>
+                    
+                    <div id="imagePlaceholder" class="image-container bg-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 aspect-video text-gray-400 text-center p-4">
+                        <span class="text-sm">Select Upload or Camera to begin</span>
+                    </div>
 
-                    <div id="analysisView" class="hidden">
-                        <div class="image-container rounded-lg overflow-hidden bg-gray-900 relative">
-                            <video id="cameraFeed" class="w-full hidden" autoplay playsinline></video>
-                            <img id="uploadedImage" class="w-full hidden" alt="Analysis Target">
-                            <canvas id="overlayCanvas"></canvas>
-                        </div>
-                        <div id="descBox" class="hidden mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                            <p id="replantDescription" class="text-xs sm:text-sm text-blue-700">Analysis pending...</p>
-                        </div>
-                    </div>
+                    <div id="analysisView" class="hidden">
+                        <div class="image-container rounded-lg overflow-hidden bg-gray-900 relative">
+                            <video id="cameraFeed" class="w-full hidden" autoplay playsinline></video>
+                            <img id="uploadedImage" class="w-full hidden" alt="Analysis Target">
+                            <canvas id="overlayCanvas"></canvas>
+                        </div>
+                        <div id="descBox" class="hidden mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                            <p id="replantDescription" class="text-xs sm:text-sm text-blue-700">Analysis pending...</p>
+                        </div>
+                    </div>
 
-                    <div id="loading" class="hidden mt-8 text-center">
-                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
-                        <p class="mt-2 text-emerald-700 font-medium text-sm">Processing in Cloud... (This may take 1 min if server is waking up)</p>
-                    </div>
+                    <div id="loading" class="hidden mt-8 text-center">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
+                        <p class="mt-2 text-emerald-700 font-medium text-sm">Processing in Cloud... (This may take 1 min if server is waking up)</p>
+                    </div>
 
-                    <div id="errorMsg" class="hidden mt-4 p-3 bg-red-50 text-red-700 rounded-lg border border-red-200 text-xs sm:text-sm break-words"></div>
-                </div>
-            </div>
-        </main>
-    </div>
+                    <div id="errorMsg" class="hidden mt-4 p-3 bg-red-50 text-red-700 rounded-lg border border-red-200 text-xs sm:text-sm break-words"></div>
+                </div>
+            </div>
+        </main>
+    </div>
 
-    <script type="module">
-        // --- CONFIGURATION ---
-        // CONNECTED TO RENDER CLOUD
-        const BACKEND_URL = "https://app-ptfm.onrender.com/analyze"; 
+    <script type="module">
+        // --- CONFIGURATION ---
+        // CONNECTED TO RENDER CLOUD
+        const BACKEND_URL = "https://app-ptfm.onrender.com/analyze"; 
 
-        // --- ELEMENTS ---
-        const els = {
-            tabUpload: document.getElementById('tabUpload'),
-            tabCamera: document.getElementById('tabCamera'),
-            uploadControls: document.getElementById('uploadControls'),
-            cameraControls: document.getElementById('cameraControls'),
-            upload: document.getElementById('imageUpload'),
-            startCamera: document.getElementById('startCameraBtn'),
-            captureBtn: document.getElementById('captureBtn'),
-            btn: document.getElementById('analyzeBtn'),
-            placeholder: document.getElementById('imagePlaceholder'),
-            view: document.getElementById('analysisView'),
-            img: document.getElementById('uploadedImage'),
-            video: document.getElementById('cameraFeed'),
-            canvas: document.getElementById('overlayCanvas'),
-            loader: document.getElementById('loading'),
-            err: document.getElementById('errorMsg'),
-            descBox: document.getElementById('descBox'),
-            desc: document.getElementById('replantDescription'),
-            serverStatus: document.getElementById('serverStatus'),
-            stats: {
-                total: document.getElementById('totalTrees'),
-                h: document.getElementById('healthyPct'),
-                s: document.getElementById('stressedPct'),
-                d: document.getElementById('deadPct')
-            }
-        };
+        // --- ELEMENTS ---
+        const els = {
+            tabUpload: document.getElementById('tabUpload'),
+            tabCamera: document.getElementById('tabCamera'),
+            uploadControls: document.getElementById('uploadControls'),
+            cameraControls: document.getElementById('cameraControls'),
+            upload: document.getElementById('imageUpload'),
+            startCamera: document.getElementById('startCameraBtn'),
+            captureBtn: document.getElementById('captureBtn'),
+            btn: document.getElementById('analyzeBtn'),
+            placeholder: document.getElementById('imagePlaceholder'),
+            view: document.getElementById('analysisView'),
+            img: document.getElementById('uploadedImage'),
+            video: document.getElementById('cameraFeed'),
+            canvas: document.getElementById('overlayCanvas'),
+            loader: document.getElementById('loading'),
+            err: document.getElementById('errorMsg'),
+            descBox: document.getElementById('descBox'),
+            desc: document.getElementById('replantDescription'),
+            serverStatus: document.getElementById('serverStatus'),
+            stats: {
+                total: document.getElementById('totalTrees'),
+                h: document.getElementById('healthyPct'),
+                s: document.getElementById('stressedPct'),
+                d: document.getElementById('deadPct')
+            }
+        };
 
-        let currentBase64 = '';
-        let stream = null; 
+        let currentBase64 = '';
+        let stream = null; 
 
-        // --- FUNCTIONS ---
+        // --- FUNCTIONS ---
 
-        function resizeAndCompress(fileOrBlob) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const cvs = document.createElement('canvas');
-                        let w = img.width, h = img.height;
-                        if (w > 1024) { h = Math.round((h * 1024) / w); w = 1024; }
-                        cvs.width = w; cvs.height = h;
-                        cvs.getContext('2d').drawImage(img, 0, 0, w, h);
-                        resolve(cvs.toDataURL('image/jpeg', 0.8).split(',')[1]);
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(fileOrBlob);
-            });
-        }
+        function resizeAndCompress(fileOrBlob) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const cvs = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        if (w > 1024) { h = Math.round((h * 1024) / w); w = 1024; }
+                        cvs.width = w; cvs.height = h;
+                        cvs.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(cvs.toDataURL('image/jpeg', 0.8).split(',')[1]);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(fileOrBlob);
+            });
+        }
 
-        function draw(data) {
-            const ctx = els.canvas.getContext('2d');
-            // Use the actual dimensions of the displayed image for canvas size
-            const imageElement = els.img.classList.contains('hidden') ? els.video : els.img;
-            els.canvas.width = imageElement.clientWidth || imageElement.videoWidth || imageElement.naturalWidth;
-            els.canvas.height = imageElement.clientHeight || imageElement.videoHeight || imageElement.naturalHeight;
-            ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
+        function draw(data) {
+            const ctx = els.canvas.getContext('2d');
+            // Use the actual dimensions of the displayed image for canvas size
+            const imageElement = els.img.classList.contains('hidden') ? els.video : els.img;
+            els.canvas.width = imageElement.clientWidth || imageElement.videoWidth || imageElement.naturalWidth;
+            els.canvas.height = imageElement.clientHeight || imageElement.videoHeight || imageElement.naturalHeight;
+            ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
 
-            if (!data?.trees) return;
-            
-            // Assuming the backend returns coordinates scaled to 1000x1000
-            const sx = els.canvas.width / 1000;
-            const sy = els.canvas.height / 1000;
+            if (!data?.trees) return;
+            
+            // Assuming the backend returns coordinates scaled to 1000x1000
+            const sx = els.canvas.width / 1000;
+            const sy = els.canvas.height / 1000;
 
-            data.trees.forEach(t => {
-                let [ymin, xmin, ymax, xmax] = t.box;
-                // Ensure coordinates are ordered for drawing
-                if (xmin > xmax) [xmin, xmax] = [xmax, xmin];
-                if (ymin > ymax) [ymin, ymax] = [ymax, ymin];
-                
-                // Set color based on health
-                ctx.strokeStyle = t.health === 'healthy' ? '#10B981' : t.health === 'stressed' ? '#F59E0B' : '#EF4444';
-                ctx.lineWidth = 3;
-                
-                // Draw bounding box
-                ctx.strokeRect(xmin * sx, ymin * sy, (xmax-xmin) * sx, (ymax-ymin) * sy);
-            });
-        }
+            data.trees.forEach(t => {
+                let [ymin, xmin, ymax, xmax] = t.box;
+                // Ensure coordinates are ordered for drawing
+                if (xmin > xmax) [xmin, xmax] = [xmax, xmin];
+                if (ymin > ymax) [ymin, ymax] = [ymax, ymin];
+                
+                // Set color based on health
+                ctx.strokeStyle = t.health === 'healthy' ? '#10B981' : t.health === 'stressed' ? '#F59E0B' : '#EF4444';
+                ctx.lineWidth = 3;
+                
+                // Draw bounding box
+                ctx.strokeRect(xmin * sx, ymin * sy, (xmax-xmin) * sx, (ymax-ymin) * sy);
+            });
+        }
 
-        function updateUI(data) {
-            const counts = { healthy: 0, stressed: 0, dead: 0 };
-            const total = data.trees?.length || 0;
-            
-            if (data.trees) {
-                data.trees.forEach(t => counts[t.health] = (counts[t.health] || 0) + 1);
-            }
-            
-            // Update stats panel
-            els.stats.total.innerText = total;
-            const calc = (n) => total ? ((n/total)*100).toFixed(0) + '%' : '0%';
-            els.stats.h.innerText = calc(counts.healthy);
-            els.stats.s.innerText = calc(counts.stressed);
-            els.stats.d.innerText = calc(counts.dead);
-            
-            // Update description
-            els.desc.innerText = data.lowGreenCoverDescription || "Analysis Complete.";
-            els.descBox.classList.remove('hidden');
-        }
+        function updateUI(data) {
+            const counts = { healthy: 0, stressed: 0, dead: 0 };
+            const total = data.trees?.length || 0;
+            
+            if (data.trees) {
+                data.trees.forEach(t => counts[t.health] = (counts[t.health] || 0) + 1);
+            }
+            
+            // Update stats panel
+            els.stats.total.innerText = total;
+            const calc = (n) => total ? ((n/total)*100).toFixed(0) + '%' : '0%';
+            els.stats.h.innerText = calc(counts.healthy);
+            els.stats.s.innerText = calc(counts.stressed);
+            els.stats.d.innerText = calc(counts.dead);
+            
+            // Update description box with server text (removes hardcoded "Local AI..." text)
+            els.desc.innerText = data.lowGreenCoverDescription || "Analysis Complete.";
+            els.descBox.classList.remove('hidden');
+        }
         
         function resetUI() {
             // Reset stats panel to 0
@@ -226,10 +225,14 @@
             els.stats.s.innerText = '0%';
             els.stats.d.innerText = '0%';
             els.desc.innerText = 'Analysis pending...';
-            els.descBox.classList.add('hidden');
+            els.descBox.classList.add('hidden'); // Ensure description box is hidden on reset
 
             // Clear canvas
+            const imageElement = els.img.classList.contains('hidden') ? els.video : els.img;
+            els.canvas.width = imageElement.clientWidth || 0;
+            els.canvas.height = imageElement.clientHeight || 0;
             els.canvas.getContext('2d').clearRect(0, 0, els.canvas.width, els.canvas.height);
+
 
             // Hide loading/error
             els.loader.classList.add('hidden');
@@ -237,59 +240,59 @@
             els.btn.disabled = true;
         }
 
-        async function analyze() {
-            els.err.classList.add('hidden');
-            els.loader.classList.remove('hidden');
-            els.btn.disabled = true;
+        async function analyze() {
+            els.err.classList.add('hidden');
+            els.loader.classList.remove('hidden');
+            els.btn.disabled = true;
             els.descBox.classList.add('hidden'); // Hide desc box during analysis
 
-            try {
-                // Use the Cloud URL
-                const response = await fetch(BACKEND_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: currentBase64 })
-                });
+            try {
+                // Use the Cloud URL
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: currentBase64 })
+                });
 
-                if (!response.ok) throw new Error(`Server Issue: ${response.status}`);
-                
-                const result = await response.json();
-                if (result.error) throw new Error(result.error);
-                
-                draw(result);
-                updateUI(result);
+                if (!response.ok) throw new Error(`Server Issue: ${response.status}`);
+                
+                const result = await response.json();
+                if (result.error) throw new Error(result.error);
+                
+                draw(result);
+                updateUI(result);
 
-            } catch (e) {
-                els.err.innerHTML = `<strong>Error:</strong> ${e.message}<br><span class="text-xs">Tip: Render Free Tier servers sleep when inactive. Try again in 1 minute.</span>`;
-                els.err.classList.remove('hidden');
-            } finally {
-                els.loader.classList.add('hidden');
-                els.btn.disabled = false;
-            }
-        }
+            } catch (e) {
+                els.err.innerHTML = `<strong>Error:</strong> ${e.message}<br><span class="text-xs">Tip: Render Free Tier servers sleep when inactive. Try again in 1 minute.</span>`;
+                els.err.classList.remove('hidden');
+            } finally {
+                els.loader.classList.add('hidden');
+                els.btn.disabled = false;
+            }
+        }
 
-        // --- INIT & EVENTS ---
+        // --- INIT & EVENTS ---
 
-        function setView(mode) {
-            resetUI(); // Reset UI when switching views
-            els.tabUpload.classList.remove('border-emerald-600', 'text-emerald-600');
-            els.tabCamera.classList.remove('border-emerald-600', 'text-emerald-600');
-            els.tabUpload.classList.add('text-gray-500');
-            els.tabCamera.classList.add('text-gray-500');
+        function setView(mode) {
+            resetUI(); // Reset UI when switching views
+            els.tabUpload.classList.remove('border-emerald-600', 'text-emerald-600');
+            els.tabCamera.classList.remove('border-emerald-600', 'text-emerald-600');
+            els.tabUpload.classList.add('text-gray-500');
+            els.tabCamera.classList.add('text-gray-500');
 
-            if (mode === 'upload') {
-                els.uploadControls.classList.remove('hidden');
-                els.cameraControls.classList.add('hidden');
-                els.tabUpload.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-600');
-                els.tabCamera.classList.remove('border-b-2');
+            if (mode === 'upload') {
+                els.uploadControls.classList.remove('hidden');
+                els.cameraControls.classList.add('hidden');
+                els.tabUpload.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-600');
+                els.tabCamera.classList.remove('border-b-2');
 
-                if (stream) { // Stop camera stream if active
-                    stream.getTracks().forEach(t => t.stop());
-                    stream = null;
-                    els.startCamera.classList.remove('hidden');
-                    els.captureBtn.classList.add('hidden');
-                }
-                // Check if an image is already uploaded to enable analyze button
+                if (stream) { // Stop camera stream if active
+                    stream.getTracks().forEach(t => t.stop());
+                    stream = null;
+                    els.startCamera.classList.remove('hidden');
+                    els.captureBtn.classList.add('hidden');
+                }
+                // Check if an image is already uploaded to enable analyze button
                 if (currentBase64) {
                     els.placeholder.classList.add('hidden');
                     els.view.classList.remove('hidden');
@@ -300,84 +303,84 @@
                     els.placeholder.classList.remove('hidden');
                     els.view.classList.add('hidden');
                 }
-            } else { // Camera mode
-                els.cameraControls.classList.remove('hidden');
-                els.uploadControls.classList.add('hidden');
-                els.tabCamera.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-600');
-                els.tabUpload.classList.remove('border-b-2');
+            } else { // Camera mode
+                els.cameraControls.classList.remove('hidden');
+                els.uploadControls.classList.add('hidden');
+                els.tabCamera.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-600');
+                els.tabUpload.classList.remove('border-b-2');
                 
                 // Camera always starts with placeholder/start button
-                els.placeholder.classList.remove('hidden');
-                els.view.classList.add('hidden');
-                els.video.classList.add('hidden');
-                els.img.classList.add('hidden');
-                els.startCamera.classList.remove('hidden');
-                els.captureBtn.classList.add('hidden');
-            }
-        }
+                els.placeholder.classList.remove('hidden');
+                els.view.classList.add('hidden');
+                els.video.classList.add('hidden');
+                els.img.classList.add('hidden');
+                els.startCamera.classList.remove('hidden');
+                els.captureBtn.classList.add('hidden');
+            }
+        }
 
-        els.tabUpload.onclick = () => setView('upload');
-        els.tabCamera.onclick = () => setView('camera');
+        els.tabUpload.onclick = () => setView('upload');
+        els.tabCamera.onclick = () => setView('camera');
 
-        els.startCamera.onclick = async () => {
-            resetUI();
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                els.video.srcObject = stream;
-                els.placeholder.classList.add('hidden');
-                els.view.classList.remove('hidden');
-                els.video.classList.remove('hidden');
-                els.img.classList.add('hidden');
-                els.startCamera.classList.add('hidden');
-                els.captureBtn.classList.remove('hidden');
-            } catch (e) { alert("Camera error: " + e.message); }
-        };
+        els.startCamera.onclick = async () => {
+            resetUI();
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                els.video.srcObject = stream;
+                els.placeholder.classList.add('hidden');
+                els.view.classList.remove('hidden');
+                els.video.classList.remove('hidden');
+                els.img.classList.add('hidden');
+                els.startCamera.classList.add('hidden');
+                els.captureBtn.classList.remove('hidden');
+            } catch (e) { alert("Camera error: " + e.message); }
+        };
 
-        els.captureBtn.onclick = () => {
-            const cvs = document.createElement('canvas');
-            cvs.width = els.video.videoWidth;
-            cvs.height = els.video.videoHeight;
-            cvs.getContext('2d').drawImage(els.video, 0, 0);
-            cvs.toBlob(async (blob) => {
-                els.img.src = URL.createObjectURL(blob);
-                currentBase64 = await resizeAndCompress(blob);
-                els.video.classList.add('hidden');
-                els.img.classList.remove('hidden');
-                if(stream) stream.getTracks().forEach(t => t.stop());
-                els.startCamera.classList.remove('hidden');
-                els.captureBtn.classList.add('hidden');
-                els.btn.disabled = false;
-            }, 'image/jpeg');
-        };
+        els.captureBtn.onclick = () => {
+            const cvs = document.createElement('canvas');
+            cvs.width = els.video.videoWidth;
+            cvs.height = els.video.videoHeight;
+            cvs.getContext('2d').drawImage(els.video, 0, 0);
+            cvs.toBlob(async (blob) => {
+                els.img.src = URL.createObjectURL(blob);
+                currentBase64 = await resizeAndCompress(blob);
+                els.video.classList.add('hidden');
+                els.img.classList.remove('hidden');
+                if(stream) stream.getTracks().forEach(t => t.stop());
+                els.startCamera.classList.remove('hidden');
+                els.captureBtn.classList.add('hidden');
+                els.btn.disabled = false;
+            }, 'image/jpeg');
+        };
 
-        els.upload.onchange = async (e) => {
-            resetUI();
-            if (!e.target.files[0]) return;
-            els.img.src = URL.createObjectURL(e.target.files[0]);
-            els.video.classList.add('hidden');
-            els.img.classList.remove('hidden');
-            els.placeholder.classList.add('hidden');
-            els.view.classList.remove('hidden');
-            currentBase64 = await resizeAndCompress(e.target.files[0]);
-            els.btn.disabled = false;
-        };
+        els.upload.onchange = async (e) => {
+            resetUI();
+            if (!e.target.files[0]) return;
+            els.img.src = URL.createObjectURL(e.target.files[0]);
+            els.video.classList.add('hidden');
+            els.img.classList.remove('hidden');
+            els.placeholder.classList.add('hidden');
+            els.view.classList.remove('hidden');
+            currentBase64 = await resizeAndCompress(e.target.files[0]);
+            els.btn.disabled = false;
+        };
 
-        els.btn.onclick = analyze;
+        els.btn.onclick = analyze;
 
         // Set initial view to upload and ensure it's styled correctly
         setView('upload');
 
 
-        // Health Check
-        fetch(BACKEND_URL.replace('/analyze', '/'))
-            .then(() => {
-                els.serverStatus.innerText = "✅ API Server Active";
-                els.serverStatus.className = "mt-3 p-2 bg-green-100 rounded text-xs text-center text-green-700";
-            })
-            .catch(() => {
-                els.serverStatus.innerText = "😴 API Server Sleeping (Waking up...)";
-            });
+        // Health Check
+        fetch(BACKEND_URL.replace('/analyze', '/'))
+            .then(() => {
+                els.serverStatus.innerText = "✅ API Server Active";
+                els.serverStatus.className = "mt-3 p-2 bg-green-100 rounded text-xs text-center text-green-700";
+            })
+            .catch(() => {
+                els.serverStatus.innerText = "😴 API Server Sleeping (Waking up...)";
+            });
 
-    </script>
+    </script>
 </body>
 </html>
