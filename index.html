@@ -395,9 +395,10 @@
                 els.fullScreenToggle.innerText = 'View Full Screen';
             }
             
-            // Redraw the canvas after the screen size has changed
+            // FIX: Redraw the canvas after the screen size has changed
+            // Increased delay to 100ms to ensure DOM updates are complete before redrawing.
             if (lastAnalysisData) {
-                setTimeout(() => draw(lastAnalysisData), 50); 
+                setTimeout(() => draw(lastAnalysisData), 100); 
             }
         }
 
