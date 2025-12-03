@@ -29,6 +29,31 @@
             z-index: 10;
         }
         .hidden { display: none !important; }
+        
+        /* New CSS for Full Screen Mode */
+        .fullscreen-app {
+            max-width: none !important; /* Remove max-width limit */
+            padding: 0 !important; /* Remove padding */
+            margin: 0 !important; /* Remove margin */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .fullscreen-display-area {
+            width: 100%;
+            padding: 0;
+        }
+        .fullscreen-visual-box {
+            border-radius: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            min-height: 100vh; /* Make it take up full viewport height */
+        }
+        .fullscreen-image-container {
+            max-width: 100vw; /* Take full viewport width */
+            max-height: calc(100vh - 50px); /* Adjust for header/controls if needed */
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -38,7 +63,7 @@
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div class="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
+            <div id="controls-panel" class="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
                 <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
                     <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Input Source</h2>
                     
@@ -78,20 +103,26 @@
                 </div>
                 </div>
 
-            <div class="lg:col-span-3 order-1 lg:order-2">
-                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
-                    <h2 class="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Visual Analysis</h2>
+            <div id="display-panel" class="lg:col-span-3 order-1 lg:order-2">
+                <div id="visual-analysis-box" class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg sm:text-xl font-semibold text-gray-700">Visual Analysis</h2>
+                        <button id="fullScreenToggle" class="hidden px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            View Full Screen
+                        </button>
+                    </div>
                     
                     <div id="imagePlaceholder" class="image-container bg-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 aspect-video text-gray-400 text-center p-4">
                         <span class="text-sm">Select Upload or Camera to begin</span>
                     </div>
 
                     <div id="analysisView" class="hidden">
-                        <div class="image-container rounded-lg overflow-hidden bg-gray-900 relative">
+                        <div id="image-video-container" class="image-container rounded-lg overflow-hidden bg-gray-900 relative">
                             <video id="cameraFeed" class="w-full hidden" autoplay playsinline></video>
                             <img id="uploadedImage" class="w-full hidden" alt="Analysis Target">
                             <canvas id="overlayCanvas"></canvas>
                         </div>
+                        
                         <div id="descBox" class="hidden mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
                             <p id="replantDescription" class="text-xs sm:text-sm text-blue-700"></p>
                         </div>
@@ -110,11 +141,11 @@
 
     <script type="module">
         // --- CONFIGURATION ---
-        // CONNECTED TO RENDER CLOUD
         const BACKEND_URL = "https://app-ptfm.onrender.com/analyze"; 
 
         // --- ELEMENTS ---
         const els = {
+            app: document.getElementById('app'),
             tabUpload: document.getElementById('tabUpload'),
             tabCamera: document.getElementById('tabCamera'),
             uploadControls: document.getElementById('uploadControls'),
@@ -133,6 +164,11 @@
             descBox: document.getElementById('descBox'),
             desc: document.getElementById('replantDescription'),
             serverStatus: document.getElementById('serverStatus'),
+            controlsPanel: document.getElementById('controls-panel'),
+            displayPanel: document.getElementById('display-panel'),
+            visualAnalysisBox: document.getElementById('visual-analysis-box'),
+            imgVideoContainer: document.getElementById('image-video-container'),
+            fullScreenToggle: document.getElementById('fullScreenToggle'),
             stats: {
                 h: document.getElementById('healthyPct'),
                 s: document.getElementById('stressedPct'),
@@ -142,6 +178,7 @@
 
         let currentBase64 = '';
         let stream = null; 
+        let isFullScreen = false;
 
         // --- FUNCTIONS ---
 
@@ -168,29 +205,38 @@
             const ctx = els.canvas.getContext('2d');
             // Use the actual dimensions of the displayed image for canvas size
             const imageElement = els.img.classList.contains('hidden') ? els.video : els.img;
-            els.canvas.width = imageElement.clientWidth || imageElement.videoWidth || imageElement.naturalWidth;
-            els.canvas.height = imageElement.clientHeight || imageElement.videoHeight || imageElement.naturalHeight;
-            ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
-
-            if (!data?.trees) return;
             
-            // Assuming the backend returns coordinates scaled to 1000x1000
-            const sx = els.canvas.width / 1000;
-            const sy = els.canvas.height / 1000;
+            // Wait for image/video to load dimensions if they aren't available immediately
+            const updateCanvasSize = () => {
+                els.canvas.width = imageElement.clientWidth || imageElement.videoWidth || imageElement.naturalWidth;
+                els.canvas.height = imageElement.clientHeight || imageElement.videoHeight || imageElement.naturalHeight;
+                ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
 
-            data.trees.forEach(t => {
-                let [ymin, xmin, ymax, xmax] = t.box;
-                // Ensure coordinates are ordered for drawing
-                if (xmin > xmax) [xmin, xmax] = [xmax, xmin];
-                if (ymin > ymax) [ymin, ymax] = [ymax, ymin];
+                if (!data?.trees) return;
                 
-                // Set color based on health
-                ctx.strokeStyle = t.health === 'healthy' ? '#10B981' : t.health === 'stressed' ? '#F59E0B' : '#EF4444';
-                ctx.lineWidth = 3;
-                
-                // Draw bounding box
-                ctx.strokeRect(xmin * sx, ymin * sy, (xmax-xmin) * sx, (ymax-ymin) * sy);
-            });
+                // Assuming the backend returns coordinates scaled to 1000x1000
+                const sx = els.canvas.width / 1000;
+                const sy = els.canvas.height / 1000;
+
+                data.trees.forEach(t => {
+                    let [ymin, xmin, ymax, xmax] = t.box;
+                    if (xmin > xmax) [xmin, xmax] = [xmax, xmin];
+                    if (ymin > ymax) [ymin, ymax] = [ymax, ymin];
+                    
+                    ctx.strokeStyle = t.health === 'healthy' ? '#10B981' : t.health === 'stressed' ? '#F59E0B' : '#EF4444';
+                    ctx.lineWidth = 3;
+                    
+                    ctx.strokeRect(xmin * sx, ymin * sy, (xmax-xmin) * sx, (ymax-ymin) * sy);
+                });
+            };
+
+            // Ensure dimensions are ready before drawing
+            if (imageElement.naturalWidth || imageElement.videoWidth) {
+                updateCanvasSize();
+            } else {
+                imageElement.onload = updateCanvasSize;
+                imageElement.onloadedmetadata = updateCanvasSize;
+            }
         }
 
         function updateUI(data) {
@@ -201,22 +247,24 @@
                 data.trees.forEach(t => counts[t.health] = (counts[t.health] || 0) + 1);
             }
             
-            // Update percentage stats panel (Total Trees logic removed)
+            // Update percentage stats panel
             const calc = (n) => total ? ((n/total)*100).toFixed(0) + '%' : '0%';
             els.stats.h.innerText = calc(counts.healthy);
             els.stats.s.innerText = calc(counts.stressed);
             els.stats.d.innerText = calc(counts.dead);
             
-            // Update description box with server text (REMOVED DEFAULT TEXT)
+            // Update description box with server text (Prevents "Local AI..." default text)
             const description = data.lowGreenCoverDescription;
             if (description) {
                 els.desc.innerText = description;
                 els.descBox.classList.remove('hidden');
             } else {
-                // If the server doesn't send a description, ensure the box stays hidden and cleared
                 els.desc.innerText = '';
                 els.descBox.classList.add('hidden');
             }
+
+            // Show full screen button after analysis
+            els.fullScreenToggle.classList.remove('hidden');
         }
         
         function resetUI() {
@@ -224,9 +272,9 @@
             els.stats.h.innerText = '0%';
             els.stats.s.innerText = '0%';
             els.stats.d.innerText = '0%';
-            // Clear description box on reset
             els.desc.innerText = ''; 
             els.descBox.classList.add('hidden'); 
+            els.fullScreenToggle.classList.add('hidden'); // Hide full screen button initially
 
             // Clear canvas
             const imageElement = els.img.classList.contains('hidden') ? els.video : els.img;
@@ -234,21 +282,22 @@
             els.canvas.height = imageElement.clientHeight || 0;
             els.canvas.getContext('2d').clearRect(0, 0, els.canvas.width, els.canvas.height);
 
-
             // Hide loading/error
             els.loader.classList.add('hidden');
             els.err.classList.add('hidden');
             els.btn.disabled = true;
+            
+            // Exit full screen mode on reset
+            if (isFullScreen) toggleFullScreen();
         }
 
         async function analyze() {
             els.err.classList.add('hidden');
             els.loader.classList.remove('hidden');
             els.btn.disabled = true;
-            els.descBox.classList.add('hidden'); // Hide desc box during analysis
+            els.descBox.classList.add('hidden'); 
 
             try {
-                // Use the Cloud URL
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -260,8 +309,9 @@
                 const result = await response.json();
                 if (result.error) throw new Error(result.error);
                 
-                draw(result);
                 updateUI(result);
+                // Draw must happen AFTER the image/video is visible and dimensions are set
+                draw(result); 
 
             } catch (e) {
                 els.err.innerHTML = `<strong>Error:</strong> ${e.message}<br><span class="text-xs">Tip: Render Free Tier servers sleep when inactive. Try again in 1 minute.</span>`;
@@ -272,10 +322,36 @@
             }
         }
 
+        function toggleFullScreen() {
+            isFullScreen = !isFullScreen;
+
+            if (isFullScreen) {
+                els.app.classList.add('fullscreen-app');
+                els.displayPanel.classList.add('lg:col-span-4', 'fullscreen-display-area');
+                els.visualAnalysisBox.classList.add('fullscreen-visual-box');
+                els.imgVideoContainer.classList.add('fullscreen-image-container');
+                els.controlsPanel.classList.add('hidden');
+                els.fullScreenToggle.innerText = 'Exit Full Screen';
+                // Trigger redraw to resize canvas to new full screen dimensions
+                const event = new Event('resize');
+                window.dispatchEvent(event);
+            } else {
+                els.app.classList.remove('fullscreen-app');
+                els.displayPanel.classList.remove('lg:col-span-4', 'fullscreen-display-area');
+                els.visualAnalysisBox.classList.remove('fullscreen-visual-box');
+                els.imgVideoContainer.classList.remove('fullscreen-image-container');
+                els.controlsPanel.classList.remove('hidden');
+                els.fullScreenToggle.innerText = 'View Full Screen';
+                // Trigger redraw to resize canvas back to normal dimensions
+                const event = new Event('resize');
+                window.dispatchEvent(event);
+            }
+        }
+
         // --- INIT & EVENTS ---
 
         function setView(mode) {
-            resetUI(); // Reset UI when switching views
+            resetUI(); 
             els.tabUpload.classList.remove('border-emerald-600', 'text-emerald-600');
             els.tabCamera.classList.remove('border-emerald-600', 'text-emerald-600');
             els.tabUpload.classList.add('text-gray-500');
@@ -287,13 +363,12 @@
                 els.tabUpload.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-600');
                 els.tabCamera.classList.remove('border-b-2');
 
-                if (stream) { // Stop camera stream if active
+                if (stream) { 
                     stream.getTracks().forEach(t => t.stop());
                     stream = null;
                     els.startCamera.classList.remove('hidden');
                     els.captureBtn.classList.add('hidden');
                 }
-                // Check if an image is already uploaded to enable analyze button
                 if (currentBase64) {
                     els.placeholder.classList.add('hidden');
                     els.view.classList.remove('hidden');
@@ -310,7 +385,6 @@
                 els.tabCamera.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-600');
                 els.tabUpload.classList.remove('border-b-2');
                 
-                // Camera always starts with placeholder/start button
                 els.placeholder.classList.remove('hidden');
                 els.view.classList.add('hidden');
                 els.video.classList.add('hidden');
@@ -367,10 +441,22 @@
         };
 
         els.btn.onclick = analyze;
+        els.fullScreenToggle.onclick = toggleFullScreen;
 
-        // Set initial view to upload and ensure it's styled correctly
+        // Re-draw canvas on window resize to keep overlay aligned
+        window.addEventListener('resize', () => {
+            // Redraw only if an analysis result exists
+            if (els.fullScreenToggle.classList.contains('hidden') === false) {
+                 // Simulate minimal data structure for drawing function
+                const dummyData = {
+                    trees: [] // Pass empty array if you only want to resize the canvas
+                };
+                draw(dummyData); 
+            }
+        });
+
+        // Set initial view
         setView('upload');
-
 
         // Health Check
         fetch(BACKEND_URL.replace('/analyze', '/'))
