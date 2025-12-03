@@ -31,47 +31,6 @@
         }
         .hidden { display: none !important; }
         
-        /* Full Screen CSS Overhaul (Retained functionality) */
-        .fullscreen-app {
-            max-width: none !important; 
-            padding: 0 !important; 
-            margin: 0 !important;
-            min-height: 100vh; 
-        }
-        .fullscreen-header {
-             margin-bottom: 0 !important;
-             padding: 1rem !important;
-             border-bottom: 1px solid #e5e7eb;
-        }
-        .fullscreen-main {
-            display: flex; 
-            flex-direction: column;
-            gap: 0 !important;
-        }
-        .fullscreen-display-panel {
-            width: 100%;
-            order: 1 !important; 
-        }
-        .fullscreen-visual-box {
-            border-radius: 0 !important;
-            /* FIX: Add padding back when in fullscreen to prevent sticking */
-            padding: 1rem !important; 
-            box-shadow: none !important;
-            border: none !important;
-        }
-        .fullscreen-image-container {
-            width: 100%;
-            max-height: 80vh; 
-            margin: 0 auto;
-        }
-        .fullscreen-image-container img, 
-        .fullscreen-image-container video,
-        .fullscreen-image-container canvas {
-            object-fit: contain; 
-            width: 100%;
-            max-height: 100%;
-        }
-        
         /* Custom styles for aesthetic improvement */
         .input-file-label {
             font-size: 0.875rem; /* text-sm */
@@ -144,10 +103,7 @@
                 <div id="visual-analysis-box" class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="visual-analysis-heading text-gray-700">Visual Analysis</h2>
-                        <button id="fullScreenToggle" class="hidden px-3 py-1 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                            View Full Screen
-                        </button>
-                    </div>
+                        </div>
                     
                     <div id="imagePlaceholder" class="image-container bg-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 aspect-video text-gray-400 text-center p-4">
                         <span class="text-sm">Select Upload or Camera to begin</span>
@@ -209,7 +165,7 @@
             displayPanel: document.getElementById('display-panel'),
             visualAnalysisBox: document.getElementById('visual-analysis-box'),
             imgVideoContainer: document.getElementById('image-video-container'),
-            fullScreenToggle: document.getElementById('fullScreenToggle'),
+            // Removed fullScreenToggle element reference
             stats: {
                 h: document.getElementById('healthyPct'),
                 s: document.getElementById('stressedPct'),
@@ -219,7 +175,7 @@
 
         let currentBase64 = '';
         let stream = null; 
-        let isFullScreen = false;
+        let isFullScreen = false; // Kept for safety, but functionally ignored
         let lastAnalysisData = null; 
 
         // --- FUNCTIONS ---
@@ -267,7 +223,8 @@
                     if (ymin > ymax) [ymin, ymax] = [ymax, ymin];
                     
                     ctx.strokeStyle = t.health === 'healthy' ? '#10B981' : t.health === 'stressed' ? '#F59E0B' : '#EF4444';
-                    ctx.lineWidth = isFullScreen ? 4 : 3; 
+                    // ctx.lineWidth calculation simplified as there is no fullscreen mode
+                    ctx.lineWidth = 3; 
                     
                     ctx.strokeRect(xmin * sx, ymin * sy, (xmax-xmin) * sx, (ymax-ymin) * sy);
                 });
@@ -309,8 +266,7 @@
                 els.descBox.classList.add('hidden');
             }
 
-            // Show full screen button after analysis
-            els.fullScreenToggle.classList.remove('hidden');
+            // Removed logic to show full screen button
         }
         
         function resetUI() {
@@ -323,7 +279,7 @@
             els.stats.d.innerText = '0%';
             els.desc.innerText = ''; 
             els.descBox.classList.add('hidden'); 
-            els.fullScreenToggle.classList.add('hidden'); 
+            // Removed full screen reset logic
 
             // Clear canvas
             els.canvas.width = 0;
@@ -333,9 +289,6 @@
             els.loader.classList.add('hidden');
             els.err.classList.add('hidden');
             els.btn.disabled = true;
-            
-            // Exit full screen mode on reset if active
-            if (isFullScreen) toggleFullScreen();
         }
 
         async function analyze() {
@@ -368,39 +321,7 @@
             }
         }
 
-        function toggleFullScreen() {
-            isFullScreen = !isFullScreen;
-
-            if (isFullScreen) {
-                // Apply Fullscreen Styles
-                els.app.classList.add('fullscreen-app');
-                els.appHeader.classList.add('fullscreen-header');
-                els.mainContent.classList.remove('grid', 'lg:grid-cols-4', 'gap-6');
-                els.mainContent.classList.add('fullscreen-main');
-                els.displayPanel.classList.add('fullscreen-display-panel');
-                els.visualAnalysisBox.classList.add('fullscreen-visual-box');
-                els.imgVideoContainer.classList.add('fullscreen-image-container');
-                els.controlsPanel.classList.add('hidden');
-                els.fullScreenToggle.innerText = 'Exit Full Screen';
-            } else {
-                // Remove Fullscreen Styles
-                els.app.classList.remove('fullscreen-app');
-                els.appHeader.classList.remove('fullscreen-header');
-                els.mainContent.classList.remove('fullscreen-main');
-                els.mainContent.classList.add('grid', 'lg:grid-cols-4', 'gap-6');
-                els.displayPanel.classList.remove('fullscreen-display-panel');
-                els.visualAnalysisBox.classList.remove('fullscreen-visual-box');
-                els.imgVideoContainer.classList.remove('fullscreen-image-container');
-                els.controlsPanel.classList.remove('hidden');
-                els.fullScreenToggle.innerText = 'View Full Screen';
-            }
-            
-            // FIX: Redraw the canvas after the screen size has changed
-            // Increased delay to 100ms to ensure DOM updates are complete before redrawing.
-            if (lastAnalysisData) {
-                setTimeout(() => draw(lastAnalysisData), 100); 
-            }
-        }
+        // Removed toggleFullScreen function
 
         // --- INIT & EVENTS ---
 
@@ -495,7 +416,7 @@
         };
 
         els.btn.onclick = analyze;
-        els.fullScreenToggle.onclick = toggleFullScreen;
+        // Removed els.fullScreenToggle.onclick
 
         // Re-draw canvas on window resize to keep overlay aligned
         window.addEventListener('resize', () => {
