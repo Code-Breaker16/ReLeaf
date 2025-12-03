@@ -208,3 +208,314 @@
             controlsPanel: document.getElementById('controls-panel'),
             displayPanel: document.getElementById('display-panel'),
             visualAnalysisBox: document.getElementById('visual-analysis-box'),
+            imgVideoContainer: document.getElementById('image-video-container'),
+            fullScreenToggle: document.getElementById('fullScreenToggle'),
+            stats: {
+                h: document.getElementById('healthyPct'),
+                s: document.getElementById('stressedPct'),
+                d: document.getElementById('deadPct')
+            }
+        };
+
+        let currentBase64 = '';
+        let stream = null; 
+        let isFullScreen = false;
+        let lastAnalysisData = null; 
+
+        // --- FUNCTIONS ---
+
+        function resizeAndCompress(fileOrBlob) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const cvs = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        if (w > 1024) { h = Math.round((h * 1024) / w); w = 1024; }
+                        cvs.width = w; cvs.height = h;
+                        cvs.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(cvs.toDataURL('image/jpeg', 0.8).split(',')[1]);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(fileOrBlob);
+            });
+        }
+
+        function draw(data) {
+            if (!data) return; 
+
+            const ctx = els.canvas.getContext('2d');
+            const imageElement = els.img.classList.contains('hidden') ? els.video : els.img;
+
+            const performDraw = () => {
+                // IMPORTANT: Resize canvas to match the currently displayed element's size
+                els.canvas.width = imageElement.clientWidth || imageElement.videoWidth || imageElement.naturalWidth;
+                els.canvas.height = imageElement.clientHeight || imageElement.videoHeight || imageElement.naturalHeight;
+                ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
+
+                if (!data.trees) return;
+                
+                // Assuming the backend returns coordinates scaled to 1000x1000
+                const sx = els.canvas.width / 1000;
+                const sy = els.canvas.height / 1000;
+
+                data.trees.forEach(t => {
+                    let [ymin, xmin, ymax, xmax] = t.box;
+                    if (xmin > xmax) [xmin, xmax] = [xmax, xmin];
+                    if (ymin > ymax) [ymin, ymax] = [ymax, ymin];
+                    
+                    ctx.strokeStyle = t.health === 'healthy' ? '#10B981' : t.health === 'stressed' ? '#F59E0B' : '#EF4444';
+                    ctx.lineWidth = isFullScreen ? 4 : 3; 
+                    
+                    ctx.strokeRect(xmin * sx, ymin * sy, (xmax-xmin) * sx, (ymax-ymin) * sy);
+                });
+            };
+
+            if (imageElement.naturalWidth || imageElement.videoWidth || imageElement.clientWidth) {
+                performDraw();
+            } else {
+                imageElement.onload = performDraw;
+                imageElement.onloadedmetadata = performDraw;
+            }
+        }
+
+        function updateUI(data) {
+            lastAnalysisData = data; 
+            const counts = { healthy: 0, stressed: 0, dead: 0 };
+            const total = data.trees?.length || 0;
+            
+            if (data.trees) {
+                data.trees.forEach(t => counts[t.health] = (counts[t.health] || 0) + 1);
+            }
+            
+            // Update percentage stats panel
+            const calc = (n) => total ? ((n/total)*100).toFixed(0) + '%' : '0%';
+            els.stats.h.innerText = calc(counts.healthy);
+            els.stats.s.innerText = calc(counts.stressed);
+            els.stats.d.innerText = calc(counts.dead);
+            
+            // FIX: Only show the description box if the server provided a description string 
+            // AND it does NOT match the boilerplate regex.
+            const description = data.lowGreenCoverDescription;
+            const isBoilerplate = description && BOILERPLATE_REGEX.test(description.toLowerCase().trim());
+            
+            if (description && description.trim() !== '' && !isBoilerplate) {
+                els.desc.innerText = description;
+                els.descBox.classList.remove('hidden');
+            } else {
+                els.desc.innerText = '';
+                els.descBox.classList.add('hidden');
+            }
+
+            // Show full screen button after analysis
+            els.fullScreenToggle.classList.remove('hidden');
+        }
+        
+        function resetUI() {
+            // Reset state
+            lastAnalysisData = null;
+            
+            // Reset percentage stats panel to 0
+            els.stats.h.innerText = '0%';
+            els.stats.s.innerText = '0%';
+            els.stats.d.innerText = '0%';
+            els.desc.innerText = ''; 
+            els.descBox.classList.add('hidden'); 
+            els.fullScreenToggle.classList.add('hidden'); 
+
+            // Clear canvas
+            els.canvas.width = 0;
+            els.canvas.height = 0;
+
+            // Hide loading/error
+            els.loader.classList.add('hidden');
+            els.err.classList.add('hidden');
+            els.btn.disabled = true;
+            
+            // Exit full screen mode on reset if active
+            if (isFullScreen) toggleFullScreen();
+        }
+
+        async function analyze() {
+            els.err.classList.add('hidden');
+            els.loader.classList.remove('hidden');
+            els.btn.disabled = true;
+            els.descBox.classList.add('hidden'); 
+
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: currentBase64 })
+                });
+
+                if (!response.ok) throw new Error(`Server Issue: ${response.status}`);
+                
+                const result = await response.json();
+                if (result.error) throw new Error(result.error);
+                
+                updateUI(result);
+                draw(result); 
+
+            } catch (e) {
+                els.err.innerHTML = `<strong>Error:</strong> ${e.message}<br><span class="text-xs">Tip: Render Free Tier servers sleep when inactive. Try again in 1 minute.</span>`;
+                els.err.classList.remove('hidden');
+            } finally {
+                els.loader.classList.add('hidden');
+                els.btn.disabled = false;
+            }
+        }
+
+        function toggleFullScreen() {
+            isFullScreen = !isFullScreen;
+
+            if (isFullScreen) {
+                // Apply Fullscreen Styles
+                els.app.classList.add('fullscreen-app');
+                els.appHeader.classList.add('fullscreen-header');
+                els.mainContent.classList.remove('grid', 'lg:grid-cols-4', 'gap-6');
+                els.mainContent.classList.add('fullscreen-main');
+                els.displayPanel.classList.add('fullscreen-display-panel');
+                els.visualAnalysisBox.classList.add('fullscreen-visual-box');
+                els.imgVideoContainer.classList.add('fullscreen-image-container');
+                els.controlsPanel.classList.add('hidden');
+                els.fullScreenToggle.innerText = 'Exit Full Screen';
+            } else {
+                // Remove Fullscreen Styles
+                els.app.classList.remove('fullscreen-app');
+                els.appHeader.classList.remove('fullscreen-header');
+                els.mainContent.classList.remove('fullscreen-main');
+                els.mainContent.classList.add('grid', 'lg:grid-cols-4', 'gap-6');
+                els.displayPanel.classList.remove('fullscreen-display-panel');
+                els.visualAnalysisBox.classList.remove('fullscreen-visual-box');
+                els.imgVideoContainer.classList.remove('fullscreen-image-container');
+                els.controlsPanel.classList.remove('hidden');
+                els.fullScreenToggle.innerText = 'View Full Screen';
+            }
+            
+            // Redraw the canvas after the screen size has changed
+            if (lastAnalysisData) {
+                setTimeout(() => draw(lastAnalysisData), 50); 
+            }
+        }
+
+        // --- INIT & EVENTS ---
+
+        function setView(mode) {
+            resetUI(); 
+            els.tabUpload.classList.remove('border-emerald-600', 'text-emerald-600');
+            els.tabCamera.classList.remove('border-emerald-600', 'text-emerald-600');
+            els.tabUpload.classList.add('text-gray-500');
+            els.tabCamera.classList.add('text-gray-500');
+
+            if (mode === 'upload') {
+                els.uploadControls.classList.remove('hidden');
+                els.cameraControls.classList.add('hidden');
+                els.tabUpload.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-600');
+                els.tabCamera.classList.remove('border-b-2');
+
+                if (stream) { 
+                    stream.getTracks().forEach(t => t.stop());
+                    stream = null;
+                    els.startCamera.classList.remove('hidden');
+                    els.captureBtn.classList.add('hidden');
+                }
+                if (currentBase64) {
+                    els.placeholder.classList.add('hidden');
+                    els.view.classList.remove('hidden');
+                    els.video.classList.add('hidden');
+                    els.img.classList.remove('hidden');
+                    els.btn.disabled = false;
+                } else {
+                    els.placeholder.classList.remove('hidden');
+                    els.view.classList.add('hidden');
+                }
+            } else { // Camera mode
+                els.cameraControls.classList.remove('hidden');
+                els.uploadControls.classList.add('hidden');
+                els.tabCamera.classList.add('border-b-2', 'border-emerald-600', 'text-emerald-600');
+                els.tabUpload.classList.remove('border-b-2');
+                
+                els.placeholder.classList.remove('hidden');
+                els.view.classList.add('hidden');
+                els.video.classList.add('hidden');
+                els.img.classList.add('hidden');
+                els.startCamera.classList.remove('hidden');
+                els.captureBtn.classList.add('hidden');
+            }
+        }
+
+        els.tabUpload.onclick = () => setView('upload');
+        els.tabCamera.onclick = () => setView('camera');
+
+        els.startCamera.onclick = async () => {
+            resetUI();
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                els.video.srcObject = stream;
+                els.placeholder.classList.add('hidden');
+                els.view.classList.remove('hidden');
+                els.video.classList.remove('hidden');
+                els.img.classList.add('hidden');
+                els.startCamera.classList.add('hidden');
+                els.captureBtn.classList.remove('hidden');
+            } catch (e) { alert("Camera error: " + e.message); }
+        };
+
+        els.captureBtn.onclick = () => {
+            const cvs = document.createElement('canvas');
+            cvs.width = els.video.videoWidth;
+            cvs.height = els.video.videoHeight;
+            cvs.getContext('2d').drawImage(els.video, 0, 0);
+            cvs.toBlob(async (blob) => {
+                els.img.src = URL.createObjectURL(blob);
+                currentBase64 = await resizeAndCompress(blob);
+                els.video.classList.add('hidden');
+                els.img.classList.remove('hidden');
+                if(stream) stream.getTracks().forEach(t => t.stop());
+                els.startCamera.classList.remove('hidden');
+                els.captureBtn.classList.add('hidden');
+                els.btn.disabled = false;
+            }, 'image/jpeg');
+        };
+
+        els.upload.onchange = async (e) => {
+            resetUI();
+            if (!e.target.files[0]) return;
+            els.img.src = URL.createObjectURL(e.target.files[0]);
+            els.video.classList.add('hidden');
+            els.img.classList.remove('hidden');
+            els.placeholder.classList.add('hidden');
+            els.view.classList.remove('hidden');
+            currentBase64 = await resizeAndCompress(e.target.files[0]);
+            els.btn.disabled = false;
+        };
+
+        els.btn.onclick = analyze;
+        els.fullScreenToggle.onclick = toggleFullScreen;
+
+        // Re-draw canvas on window resize to keep overlay aligned
+        window.addEventListener('resize', () => {
+            if (lastAnalysisData) {
+                draw(lastAnalysisData); 
+            }
+        });
+
+        // Set initial view
+        setView('upload');
+
+        // Health Check
+        fetch(BACKEND_URL.replace('/analyze', '/'))
+            .then(() => {
+                els.serverStatus.innerText = "✅ API Server Active";
+                els.serverStatus.className = "mt-3 p-2 bg-green-100 rounded text-xs text-center text-green-700";
+            })
+            .catch(() => {
+                els.serverStatus.innerText = "😴 API Server Sleeping (Waking up...)";
+            });
+
+    </script>
+</body>
+</html>
