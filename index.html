@@ -32,15 +32,18 @@
         
         /* New CSS for Full Screen Mode */
         .fullscreen-app {
-            max-width: none !important; /* Remove max-width limit */
-            padding: 0 !important; /* Remove padding */
-            margin: 0 !important; /* Remove margin */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            max-width: none !important; 
+            padding: 0 !important; 
+            margin: 0 !important;
+            height: 100vh;
+            overflow: hidden; /* Prevent body scroll in fullscreen */
         }
-        .fullscreen-display-area {
-            width: 100%;
+        .fullscreen-main {
+            height: 100%;
+        }
+        .fullscreen-display-panel {
+            flex: 1; 
+            max-width: 100%;
             padding: 0;
         }
         .fullscreen-visual-box {
@@ -48,11 +51,22 @@
             padding: 0 !important;
             box-shadow: none !important;
             border: none !important;
-            min-height: 100vh; /* Make it take up full viewport height */
+            height: 100%; 
+            display: flex;
+            flex-direction: column;
         }
         .fullscreen-image-container {
-            max-width: 100vw; /* Take full viewport width */
-            max-height: calc(100vh - 50px); /* Adjust for header/controls if needed */
+            flex-grow: 1; /* Allow container to fill space */
+            max-width: 100vw;
+            height: auto;
+            max-height: 100%; 
+        }
+        .fullscreen-image-container img, 
+        .fullscreen-image-container video,
+        .fullscreen-image-container canvas {
+            object-fit: contain; /* Important: ensures image fits without cropping */
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
@@ -62,7 +76,7 @@
             <h1 class="text-2xl sm:text-3xl font-bold text-emerald-700">🌲 ReLeaf – Cloud AI</h1>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <main id="main-content" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div id="controls-panel" class="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
                 <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg border border-gray-200">
                     <h2 class="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Input Source</h2>
@@ -146,6 +160,7 @@
         // --- ELEMENTS ---
         const els = {
             app: document.getElementById('app'),
+            mainContent: document.getElementById('main-content'),
             tabUpload: document.getElementById('tabUpload'),
             tabCamera: document.getElementById('tabCamera'),
             uploadControls: document.getElementById('uploadControls'),
@@ -179,6 +194,7 @@
         let currentBase64 = '';
         let stream = null; 
         let isFullScreen = false;
+        let lastAnalysisData = null; // Store analysis data to redraw the canvas
 
         // --- FUNCTIONS ---
 
@@ -202,17 +218,19 @@
         }
 
         function draw(data) {
+            if (!data) return; 
+
             const ctx = els.canvas.getContext('2d');
-            // Use the actual dimensions of the displayed image for canvas size
             const imageElement = els.img.classList.contains('hidden') ? els.video : els.img;
-            
-            // Wait for image/video to load dimensions if they aren't available immediately
-            const updateCanvasSize = () => {
+
+            // Function to perform the actual drawing and resizing
+            const performDraw = () => {
+                // IMPORTANT: Resize canvas to match the currently displayed element's size
                 els.canvas.width = imageElement.clientWidth || imageElement.videoWidth || imageElement.naturalWidth;
                 els.canvas.height = imageElement.clientHeight || imageElement.videoHeight || imageElement.naturalHeight;
                 ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
 
-                if (!data?.trees) return;
+                if (!data.trees) return;
                 
                 // Assuming the backend returns coordinates scaled to 1000x1000
                 const sx = els.canvas.width / 1000;
@@ -224,22 +242,24 @@
                     if (ymin > ymax) [ymin, ymax] = [ymax, ymin];
                     
                     ctx.strokeStyle = t.health === 'healthy' ? '#10B981' : t.health === 'stressed' ? '#F59E0B' : '#EF4444';
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = isFullScreen ? 4 : 3; // Thicker lines in full screen
                     
                     ctx.strokeRect(xmin * sx, ymin * sy, (xmax-xmin) * sx, (ymax-ymin) * sy);
                 });
             };
 
-            // Ensure dimensions are ready before drawing
-            if (imageElement.naturalWidth || imageElement.videoWidth) {
-                updateCanvasSize();
+            // Check if dimensions are available yet, otherwise wait for load events
+            if (imageElement.naturalWidth || imageElement.videoWidth || imageElement.clientWidth) {
+                performDraw();
             } else {
-                imageElement.onload = updateCanvasSize;
-                imageElement.onloadedmetadata = updateCanvasSize;
+                // If the element loads asynchronously (especially video or new images)
+                imageElement.onload = performDraw;
+                imageElement.onloadedmetadata = performDraw;
             }
         }
 
         function updateUI(data) {
+            lastAnalysisData = data; // Store the data
             const counts = { healthy: 0, stressed: 0, dead: 0 };
             const total = data.trees?.length || 0;
             
@@ -268,26 +288,27 @@
         }
         
         function resetUI() {
+            // Reset state
+            lastAnalysisData = null;
+            
             // Reset percentage stats panel to 0
             els.stats.h.innerText = '0%';
             els.stats.s.innerText = '0%';
             els.stats.d.innerText = '0%';
             els.desc.innerText = ''; 
             els.descBox.classList.add('hidden'); 
-            els.fullScreenToggle.classList.add('hidden'); // Hide full screen button initially
+            els.fullScreenToggle.classList.add('hidden'); 
 
             // Clear canvas
-            const imageElement = els.img.classList.contains('hidden') ? els.video : els.img;
-            els.canvas.width = imageElement.clientWidth || 0;
-            els.canvas.height = imageElement.clientHeight || 0;
-            els.canvas.getContext('2d').clearRect(0, 0, els.canvas.width, els.canvas.height);
+            els.canvas.width = 0;
+            els.canvas.height = 0;
 
             // Hide loading/error
             els.loader.classList.add('hidden');
             els.err.classList.add('hidden');
             els.btn.disabled = true;
             
-            // Exit full screen mode on reset
+            // Exit full screen mode on reset if active
             if (isFullScreen) toggleFullScreen();
         }
 
@@ -310,7 +331,7 @@
                 if (result.error) throw new Error(result.error);
                 
                 updateUI(result);
-                // Draw must happen AFTER the image/video is visible and dimensions are set
+                // Draw function will automatically wait for image load to get correct dimensions
                 draw(result); 
 
             } catch (e) {
@@ -326,25 +347,31 @@
             isFullScreen = !isFullScreen;
 
             if (isFullScreen) {
+                document.body.style.overflow = 'hidden'; // Hide body scrollbar
                 els.app.classList.add('fullscreen-app');
-                els.displayPanel.classList.add('lg:col-span-4', 'fullscreen-display-area');
+                els.mainContent.classList.add('fullscreen-main');
+                els.displayPanel.classList.remove('lg:col-span-3');
+                els.displayPanel.classList.add('lg:col-span-4', 'fullscreen-display-panel');
                 els.visualAnalysisBox.classList.add('fullscreen-visual-box');
                 els.imgVideoContainer.classList.add('fullscreen-image-container');
                 els.controlsPanel.classList.add('hidden');
                 els.fullScreenToggle.innerText = 'Exit Full Screen';
-                // Trigger redraw to resize canvas to new full screen dimensions
-                const event = new Event('resize');
-                window.dispatchEvent(event);
             } else {
+                document.body.style.overflow = ''; // Restore body scrollbar
                 els.app.classList.remove('fullscreen-app');
-                els.displayPanel.classList.remove('lg:col-span-4', 'fullscreen-display-area');
+                els.mainContent.classList.remove('fullscreen-main');
+                els.displayPanel.classList.remove('lg:col-span-4', 'fullscreen-display-panel');
+                els.displayPanel.classList.add('lg:col-span-3');
                 els.visualAnalysisBox.classList.remove('fullscreen-visual-box');
                 els.imgVideoContainer.classList.remove('fullscreen-image-container');
                 els.controlsPanel.classList.remove('hidden');
                 els.fullScreenToggle.innerText = 'View Full Screen';
-                // Trigger redraw to resize canvas back to normal dimensions
-                const event = new Event('resize');
-                window.dispatchEvent(event);
+            }
+            
+            // Redraw the canvas after the screen size has changed
+            if (lastAnalysisData) {
+                // Wait briefly for browser layout calculation to finish
+                setTimeout(() => draw(lastAnalysisData), 50); 
             }
         }
 
@@ -445,13 +472,8 @@
 
         // Re-draw canvas on window resize to keep overlay aligned
         window.addEventListener('resize', () => {
-            // Redraw only if an analysis result exists
-            if (els.fullScreenToggle.classList.contains('hidden') === false) {
-                 // Simulate minimal data structure for drawing function
-                const dummyData = {
-                    trees: [] // Pass empty array if you only want to resize the canvas
-                };
-                draw(dummyData); 
+            if (lastAnalysisData) {
+                draw(lastAnalysisData); 
             }
         });
 
